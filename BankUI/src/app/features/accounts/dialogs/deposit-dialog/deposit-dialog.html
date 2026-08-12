@@ -1,0 +1,108 @@
+<div class="dialog-header">
+
+  <div>
+    <h2>Para Yatır</h2>
+
+    <p>
+      Hesabınıza para yatırın
+    </p>
+  </div>
+
+  <button
+    class="close-btn"
+    type="button"
+    (click)="close()">
+
+    ×
+
+  </button>
+
+</div>
+
+
+<div class="account-card">
+
+  <div class="account-info">
+
+    <span class="account-label">
+      Hesap
+    </span>
+
+    <strong>
+      {{ account.nickname || account.currencyCode + ' Hesabı' }}
+    </strong>
+
+    <span class="iban">
+      {{ account.iban }}
+    </span>
+
+  </div>
+
+
+  <div class="balance">
+
+    <span>
+      Mevcut Bakiye
+    </span>
+
+    <strong>
+      {{ account.balance | currency: account.currencyCode : 'symbol' : '1.2-2' : 'tr' }}
+    </strong>
+
+  </div>
+
+</div>
+
+
+<div class="form">
+
+  <label>Tutar</label>
+
+  <div class="amount-wrapper">
+
+    <span class="currency">
+      {{ account.currencyCode }}
+    </span>
+
+    <input
+      type="number"
+      [(ngModel)]="amount"
+      min="0"
+      placeholder="0.00">
+
+  </div>
+
+
+  <label>Açıklama</label>
+
+  <textarea
+    [(ngModel)]="description"
+    rows="3"
+    placeholder="İşlem açıklaması">
+  </textarea>
+
+</div>
+
+
+<div class="actions">
+
+  <button
+    class="cancel-btn"
+    type="button"
+    (click)="close()">
+
+    Vazgeç
+
+  </button>
+
+  <button
+    class="deposit-btn"
+    type="button"
+    [disabled]="amount <= 0"
+    (click)="deposit()">
+
+    Para Yatır
+
+  </button>
+
+</div>

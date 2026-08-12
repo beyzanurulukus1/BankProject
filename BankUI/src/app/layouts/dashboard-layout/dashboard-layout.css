@@ -1,0 +1,432 @@
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.layout {
+    display: flex;
+
+    width: 100%;
+    height: 100vh;
+
+    background: #f5f7fb;
+
+    overflow: hidden;
+}
+
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.sidebar {
+    width: 220px;
+    height: 100vh;
+
+    box-sizing: border-box;
+
+    background: #FFC72C;
+    color: #222;
+
+    padding: 25px 18px;
+
+    flex-shrink: 0;
+
+    overflow: hidden;
+
+    transition:
+        width 0.25s ease,
+        padding 0.25s ease;
+}
+
+
+/* =========================================
+   COLLAPSED SIDEBAR
+========================================= */
+
+.sidebar.collapsed {
+    width: 76px;
+
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+
+/* =========================================
+   SIDEBAR HEADER
+========================================= */
+
+.sidebar-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    min-height: 40px;
+
+    margin-bottom: 35px;
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    color: #222;
+
+    font-size: 20px;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+}
+
+
+/* =========================================
+   BRAND MARK
+========================================= */
+
+.brand-mark {
+    width: 34px;
+    height: 34px;
+
+    min-width: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #222;
+    color: #FFC72C;
+
+    border-radius: 10px;
+
+    font-size: 17px;
+    font-weight: 800;
+}
+
+
+/* =========================================
+   MENU BUTTON
+========================================= */
+
+.menu-toggle {
+    width: 38px;
+    height: 38px;
+
+    min-width: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: #222;
+
+    cursor: pointer;
+
+    padding: 0;
+
+    transition: background 0.2s ease;
+}
+
+
+.menu-toggle:hover {
+    background: rgba(0, 0, 0, 0.10);
+}
+
+
+.menu-toggle .material-icons {
+    font-size: 23px;
+}
+
+
+/* =========================================
+   COLLAPSED HEADER
+========================================= */
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+
+/* =========================================
+   MENU SECTIONS
+========================================= */
+
+.menu-section {
+    width: 100%;
+
+    margin-bottom: 28px;
+}
+
+
+.account-section {
+    margin-top: 5px;
+}
+
+
+/* =========================================
+   SECTION TITLE
+========================================= */
+
+.section-title {
+    display: block;
+
+    margin-bottom: 10px;
+
+    padding-left: 12px;
+
+    color: rgba(34, 34, 34, 0.55);
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+}
+
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.sidebar nav {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    width: 100%;
+}
+
+
+/* =========================================
+   NAVIGATION LINKS
+========================================= */
+
+.sidebar a {
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    width: 100%;
+    height: 46px;
+
+    box-sizing: border-box;
+
+    padding: 0 13px;
+
+    color: #222;
+
+    text-decoration: none;
+
+    border-radius: 12px;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+/* =========================================
+   HOVER
+========================================= */
+
+.sidebar a:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================
+   ACTIVE LINK
+========================================= */
+
+.sidebar a.active {
+    background: #222;
+
+    color: white;
+}
+
+
+/* =========================================
+   MATERIAL ICONS
+========================================= */
+
+.sidebar .material-icons {
+    width: 22px;
+    height: 22px;
+
+    min-width: 22px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 22px;
+
+    line-height: 1;
+}
+
+
+/* =========================================
+   COLLAPSED NAVIGATION
+========================================= */
+
+.sidebar.collapsed nav {
+    align-items: center;
+}
+
+
+/* =========================================
+   COLLAPSED LINKS
+========================================= */
+
+.sidebar.collapsed a {
+    width: 46px;
+    height: 46px;
+
+    padding: 0;
+
+    justify-content: center;
+}
+
+
+/* =========================================
+   COLLAPSED SECTIONS
+========================================= */
+
+.sidebar.collapsed .menu-section {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+}
+
+
+/* =========================================
+   MAIN CONTENT
+========================================= */
+
+.content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100vh;
+  box-sizing: border-box;
+
+  padding: 30px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background: #f5f7fb;
+}
+
+
+/* =========================================
+   DASHBOARD
+========================================= */
+
+.dashboard {
+    width: 100%;
+
+    max-width: 1200px;
+
+    box-sizing: border-box;
+
+    margin: 0 auto;
+
+    padding: 20px 40px 40px;
+
+    background: #f7f8fa;
+}
+
+
+/* =========================================
+   SMALL CARDS
+========================================= */
+
+.small-card {
+    background: white;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.08);
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+.small-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 12px 25px rgba(0, 0, 0, 0.10);
+}
+
+
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+
+.actions button {
+    background: #FFC72C !important;
+
+    color: #222 !important;
+
+    font-weight: 600;
+}
+
+
+.actions button:hover {
+    background: #f0b800 !important;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+
+    .sidebar {
+        width: 190px;
+    }
+
+    .content {
+        padding: 20px;
+    }
+
+    .dashboard {
+        padding: 20px;
+    }
+
+}

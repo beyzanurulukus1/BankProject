@@ -1,0 +1,32 @@
+# .NET
+**/bin/
+**/obj/
+
+# Node / Angular
+**/node_modules/
+**/.angular/
+**/dist/
+
+# Environment / secrets
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/.env
+**/.env.*
+!**/.env.example
+
+# macOS
+.DS_Store
+
+# Temporary / editor files
+*.user
+*.suo
+*.swp
+*~
+
+# Local temporary files
+..save
+*.textClipping
+
+# Local configuration
+**/appsettings.json
+**/appsettings.Development.json

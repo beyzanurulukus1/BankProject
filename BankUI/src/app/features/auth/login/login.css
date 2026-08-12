@@ -1,0 +1,87 @@
+.login-page{
+
+    display:flex;
+
+    height:100vh;
+
+}
+
+.left-panel{
+
+    flex:1;
+
+    background:linear-gradient(135deg,#FFC72C,#FFC72C);
+
+    color:white;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+}
+
+.left-panel h1{
+
+    font-size:58px;
+
+    margin-bottom:15px;
+
+}
+
+.left-panel p{
+
+    width:60%;
+
+    text-align:center;
+
+    font-size:18px;
+
+    line-height:1.6;
+
+}
+
+.right-panel{
+
+    flex:1;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#f6f8fc;
+
+}
+
+mat-card{
+
+    width:430px;
+
+    padding:45px;
+
+    border-radius:18px;
+
+}
+
+form{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+}
+
+.login-btn{
+
+    height:52px;
+
+    font-size:17px;
+
+}

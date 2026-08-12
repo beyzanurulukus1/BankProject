@@ -1,0 +1,34 @@
+<div class="deposit-container">
+
+    <h1>Para Yatır</h1>
+  
+    <p class="account">
+      Hesap No: {{ accountId }}
+    </p>
+  
+    <div class="form-group">
+      <label>Tutar</label>
+  
+      <input
+        type="number"
+        [(ngModel)]="amount">
+    </div>
+  
+    <div class="form-group">
+      <label>Açıklama</label>
+  
+      <textarea
+        rows="3"
+        [(ngModel)]="description">
+      </textarea>
+    </div>
+  
+    <button
+      class="deposit-btn"
+      (click)="deposit()">
+  
+      Para Yatır
+  
+    </button>
+  
+  </div>

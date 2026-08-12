@@ -1,0 +1,210 @@
+<div class="register-page">
+
+  <div class="register-card">
+
+    <div class="logo">
+      <span>B</span>
+      <strong>BankUI</strong>
+    </div>
+
+
+    <div class="header">
+
+      <h1>Hesap Oluştur</h1>
+
+      <p>
+        BankUI'a katılmak için bilgilerinizi girin.
+      </p>
+
+    </div>
+
+
+    <form (ngSubmit)="register()">
+
+
+      <!-- AD SOYAD -->
+
+      <div class="form-row">
+
+        <div class="form-group">
+
+          <label>Ad</label>
+
+          <input
+            type="text"
+            [(ngModel)]="firstName"
+            name="firstName"
+            placeholder="Adınız"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>Soyad</label>
+
+          <input
+            type="text"
+            [(ngModel)]="lastName"
+            name="lastName"
+            placeholder="Soyadınız"
+          >
+
+        </div>
+
+      </div>
+
+
+      <!-- EMAIL -->
+
+      <div class="form-group">
+
+        <label>E-posta</label>
+
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="ornek@email.com"
+        >
+
+      </div>
+
+
+      <!-- TELEFON -->
+
+      <div class="form-group">
+
+        <label>Telefon</label>
+
+        <input
+          type="tel"
+          [(ngModel)]="phoneNumber"
+          name="phoneNumber"
+          placeholder="05XXXXXXXXX"
+        >
+
+      </div>
+
+
+      <!-- TCKN -->
+
+      <div class="form-group">
+
+        <label>T.C. Kimlik No</label>
+
+        <input
+          type="text"
+          [(ngModel)]="tckn"
+          name="tckn"
+          maxlength="11"
+          placeholder="11 haneli TCKN"
+        >
+
+      </div>
+
+
+      <!-- DOĞUM TARİHİ -->
+
+      <div class="form-group">
+
+        <label>Doğum Tarihi</label>
+
+        <input
+          type="date"
+          [(ngModel)]="dateOfBirth"
+          name="dateOfBirth"
+        >
+
+      </div>
+
+
+      <!-- ŞİFRE -->
+
+      <div class="form-row">
+
+        <div class="form-group">
+
+          <label>Şifre</label>
+
+          <input
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Şifreniz"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>Şifre Tekrar</label>
+
+          <input
+            type="password"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Şifrenizi tekrar girin"
+          >
+
+        </div>
+
+      </div>
+
+
+      <!-- HATA -->
+
+      <div
+        class="message error"
+        *ngIf="errorMessage">
+
+        {{ errorMessage }}
+
+      </div>
+
+
+      <!-- BAŞARI -->
+
+      <div
+        class="message success"
+        *ngIf="successMessage">
+
+        {{ successMessage }}
+
+      </div>
+
+
+      <!-- BUTTON -->
+
+      <button
+        type="submit"
+        class="register-button"
+        [disabled]="loading">
+
+        {{ loading ? 'Kayıt oluşturuluyor...' : 'Kayıt Ol' }}
+
+      </button>
+
+
+    </form>
+
+
+    <div class="login-link">
+
+      Zaten hesabınız var mı?
+
+      <button
+        type="button"
+        (click)="goToLogin()">
+
+        Giriş Yap
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

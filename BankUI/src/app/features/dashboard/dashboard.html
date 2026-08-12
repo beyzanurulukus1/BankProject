@@ -1,0 +1,149 @@
+<div class="dashboard" *ngIf="dashboard">
+
+    <h1>Hoş Geldiniz {{ dashboard.customerName }} 👋</h1>
+
+    <p class="subtitle">
+        İnternet Bankacılığı Paneli
+    </p>
+
+    <!-- Toplam Bakiye -->
+
+    <mat-card class="balance-card">
+
+    <h3>Toplam Bakiyeler</h3>
+
+    <div class="balance-list">
+
+        <div
+            class="balance-item"
+            *ngFor="let balance of dashboard.balances">
+
+            <span class="currency-name">
+                {{ balance.currencyCode }}
+            </span>
+
+            <span class="currency-amount">
+                {{ balance.balance | number:'1.2-2' }}
+                {{ balance.currencySymbol }}
+            </span>
+
+        </div>
+
+    </div>
+
+</mat-card>
+
+    <!-- Bilgi Kartları -->
+
+    <div class="cards">
+
+        <!-- Toplam Hesap -->
+
+        <mat-card class="small-card">
+
+            <div class="icon">💳</div>
+
+            <h3>Toplam Hesap</h3>
+
+            <p>{{ dashboard.accountCount }}</p>
+
+        </mat-card>
+
+        <!-- Aktif Hesap -->
+
+        <mat-card class="small-card">
+
+            <div class="icon">🏦</div>
+
+            <h3>Aktif Hesap</h3>
+
+            <p>{{ dashboard.activeAccountCount }}</p>
+
+        </mat-card>
+
+        <!-- Son İşlemler -->
+
+ <mat-card class="small-card">
+
+    <div class="icon">📋</div>
+
+    <h3>Son İşlemler</h3>
+
+    <div
+        class="transaction-item"
+        *ngFor="let transaction of dashboard.recentTransactions">
+
+        <div class="left">
+
+            <strong>
+                {{ getTransactionName(transaction.transactionType) }}
+            </strong>
+
+            <small>
+                {{ transaction.transactionTime | date:'dd.MM.yyyy HH:mm' }}
+            </small>
+
+        </div>
+
+        <div
+            class="amount"
+            [class.income]="!transaction.isOutgoing"
+            [class.expense]="transaction.isOutgoing">
+
+            {{ transaction.isOutgoing ? '-' : '+' }}
+            {{ transaction.amount | number:'1.2-2' }}
+            {{ transaction.currencySymbol }}
+
+        </div>
+
+    </div>
+
+</mat-card>
+<mat-card class="exchange-card">
+
+    <div class="exchange-header">
+        <div>
+            <h3>Güncel Döviz Kurları</h3>
+            <p>TCMB gösterge kurları</p>
+        </div>
+    </div>
+
+    <div class="exchange-table">
+
+        <div class="exchange-row exchange-title">
+            <span>Parite</span>
+            <span>Alış</span>
+            <span>Satış</span>
+            <span>Güncelleme</span>
+        </div>
+
+        <div
+            class="exchange-row"
+            *ngFor="let rate of exchangeRates"
+        >
+
+            <span class="pair">
+                {{ rate.fromCurrency }}/{{ rate.toCurrency }}
+            </span>
+
+            <span>
+                {{ rate.buyingRate | number:'1.4-4' }} ₺
+            </span>
+
+            <span>
+                {{ rate.sellingRate | number:'1.4-4' }} ₺
+            </span>
+
+            <span>
+                {{ rate.updatedAt | date:'HH:mm' }}
+            </span>
+
+        </div>
+
+    </div>
+
+</mat-card>
+
+
+</div>
+

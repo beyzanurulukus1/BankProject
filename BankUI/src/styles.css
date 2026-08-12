@@ -1,0 +1,21 @@
+html,
+body{
+    height:100%;
+}
+
+body{
+
+    margin:0;
+
+    font-family:'Inter',sans-serif;
+
+    background:#f4f6fb;
+
+    color:#222;
+}
+
+*{
+
+    box-sizing:border-box;
+
+}

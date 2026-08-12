@@ -1,0 +1,145 @@
+<div class="layout">
+
+  <aside
+    class="sidebar"
+    [class.collapsed]="!sidebarOpen">
+
+    <!-- SIDEBAR HEADER -->
+    <div class="sidebar-header">
+
+      <div class="brand">
+
+        <span class="brand-mark">
+          B
+        </span>
+
+        <span
+          class="brand-name"
+          *ngIf="sidebarOpen">
+          BankUI
+        </span>
+
+      </div>
+
+      <button
+        class="menu-toggle"
+        type="button"
+        (click)="toggleSidebar()">
+
+        <span class="material-icons">
+          menu
+        </span>
+
+      </button>
+
+    </div>
+
+
+    <!-- GENEL -->
+    <div class="menu-section">
+
+      <span
+        class="section-title"
+        *ngIf="sidebarOpen">
+
+        GENEL
+
+      </span>
+
+      <nav>
+
+        <!-- Dashboard -->
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="active">
+
+          <span class="material-icons">
+            dashboard
+          </span>
+
+          <span *ngIf="sidebarOpen">
+            Dashboard
+          </span>
+
+        </a>
+
+
+        <!-- Hesaplar -->
+        <a
+          routerLink="/accounts"
+          routerLinkActive="active">
+
+          <span class="material-icons">
+            account_balance_wallet
+          </span>
+
+          <span *ngIf="sidebarOpen">
+            Hesaplarım
+          </span>
+
+        </a>
+
+
+        <!-- Geçmiş -->
+        <a
+          routerLink="/history"
+          routerLinkActive="active">
+
+          <span class="material-icons">
+            receipt_long
+          </span>
+
+          <span *ngIf="sidebarOpen">
+            İşlem Geçmişi
+          </span>
+
+        </a>
+
+      </nav>
+
+    </div>
+
+
+    <!-- HESAP -->
+    <div class="menu-section account-section">
+
+      <span
+        class="section-title"
+        *ngIf="sidebarOpen">
+
+        HESAP
+
+      </span>
+
+      <nav>
+
+        <!-- Profil -->
+        <a
+          routerLink="/profile"
+          routerLinkActive="active">
+
+          <span class="material-icons">
+            person_outline
+          </span>
+
+          <span *ngIf="sidebarOpen">
+            Profil
+          </span>
+
+        </a>
+
+      </nav>
+
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN CONTENT -->
+  <main class="content">
+
+    <router-outlet></router-outlet>
+
+  </main>
+
+</div>

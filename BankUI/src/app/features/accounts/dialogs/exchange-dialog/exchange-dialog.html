@@ -1,0 +1,184 @@
+<div class="exchange-dialog">
+
+  <h2>Döviz Dönüştür</h2>
+
+  <div class="source-info">
+
+    <div class="source-title">
+      Kaynak Hesap
+    </div>
+
+    <div class="source-name">
+      {{ sourceAccount.nickname }}
+    </div>
+
+    <div class="source-details">
+      {{ sourceAccount.currencyCode }}
+      · Bakiye:
+      {{ sourceAccount.balance | number:'1.2-2' }}
+    </div>
+
+  </div>
+
+  <div
+    *ngIf="isLoading"
+    class="loading">
+
+    Veriler yükleniyor...
+
+  </div>
+
+  <div
+    *ngIf="!isLoading && loadError"
+    class="warning">
+
+    {{ loadError }}
+
+  </div>
+
+  <form
+    *ngIf="!isLoading && !loadError"
+    [formGroup]="exchangeForm"
+    (ngSubmit)="submit()">
+
+    <mat-form-field
+      appearance="outline"
+      class="full-width">
+
+      <mat-label>Hedef Hesap</mat-label>
+
+      <mat-select
+        formControlName="targetAccountId"
+        (selectionChange)="onTargetAccountChange()">
+
+        <mat-option
+          *ngFor="let account of targetAccounts"
+          [value]="account.accountId">
+
+          {{ account.nickname }}
+          · {{ account.currencyCode }}
+          · {{ account.balance | number:'1.2-2' }}
+
+        </mat-option>
+
+      </mat-select>
+
+    </mat-form-field>
+
+    <mat-form-field
+      appearance="outline"
+      class="full-width">
+
+      <mat-label>Dönüştürülecek Tutar</mat-label>
+
+      <input
+        matInput
+        type="number"
+        min="0.01"
+        formControlName="amount"
+        (input)="onAmountChange()"
+      />
+
+      <span matTextSuffix>
+        {{ sourceAccount.currencyCode }}
+      </span>
+
+    </mat-form-field>
+
+    <div
+      *ngIf="
+        selectedRate &&
+        rateType &&
+        convertedAmount !== null
+      "
+      class="rate-preview">
+
+      <div class="rate-row">
+
+        <span>Kur</span>
+
+        <strong>
+          {{ getCurrentRate() | number:'1.4-4' }}
+        </strong>
+
+      </div>
+
+      <div class="rate-row">
+
+        <span>Kur Tipi</span>
+
+        <strong>
+          {{ rateType === 'BUYING' ? 'Alış' : 'Satış' }}
+        </strong>
+
+      </div>
+
+      <div class="result-row">
+
+        <span>Alınacak Tutar</span>
+
+        <strong>
+          {{ convertedAmount | number:'1.2-2' }}
+          {{ getTargetCurrency() }}
+        </strong>
+
+      </div>
+
+    </div>
+
+    <mat-form-field
+      appearance="outline"
+      class="full-width">
+
+      <mat-label>Açıklama</mat-label>
+
+      <input
+        matInput
+        formControlName="description"
+      />
+
+    </mat-form-field>
+
+    <div
+      *ngIf="targetAccounts.length === 0"
+      class="warning">
+
+      Farklı para biriminde aktif bir hesabınız bulunmuyor.
+
+    </div>
+
+    <div class="actions">
+
+      <button
+        mat-button
+        type="button"
+        (click)="close()">
+
+        Vazgeç
+
+      </button>
+
+      <button
+        mat-raised-button
+        type="submit"
+        class="exchange-submit-button"
+        [disabled]="
+          exchangeForm.invalid ||
+          !convertedAmount ||
+          isSubmitting ||
+          targetAccounts.length === 0
+        ">
+
+        {{
+          isSubmitting
+            ? 'Dönüştürülüyor...'
+            : 'Döviz Dönüştür'
+        }}
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>

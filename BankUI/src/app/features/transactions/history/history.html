@@ -1,0 +1,117 @@
+<div class="history-page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Hesap Hareketleri</h1>
+
+      <p>
+        Gerçekleşen para yatırma, çekme ve transfer işlemlerinizi
+        görüntüleyebilirsiniz.
+      </p>
+    </div>
+
+  </div>
+
+
+  <div *ngIf="loading" class="loading">
+    Hareketler yükleniyor...
+  </div>
+
+
+  <div
+    *ngIf="!loading && transactions.length === 0"
+    class="empty">
+
+    <div class="empty-icon">📄</div>
+
+    <h2>Henüz işlem bulunmuyor</h2>
+
+    <p>
+      Hesaplarınızdaki işlemler burada görüntülenecek.
+    </p>
+
+  </div>
+
+
+  <div
+    *ngIf="!loading && transactions.length > 0"
+    class="transaction-list">
+
+    <div
+      class="transaction-card"
+      *ngFor="let transaction of transactions">
+
+      <div class="transaction-icon">
+
+        <span *ngIf="transaction.transactionType === 'DEPOSIT'">
+          ↓
+        </span>
+
+        <span *ngIf="transaction.transactionType === 'WITHDRAW'">
+          ↑
+        </span>
+
+        <span *ngIf="transaction.transactionType === 'TRANSFER'">
+          ↔
+        </span>
+
+      </div>
+
+
+      <div class="transaction-info">
+
+        <h3>
+          {{ getTransactionName(transaction.transactionType) }}
+        </h3>
+
+        <p>
+          {{ transaction.description }}
+        </p>
+
+        <small>
+          {{ transaction.transactionTime | date:'dd.MM.yyyy HH:mm' }}
+        </small>
+
+      </div>
+
+
+      <div class="transaction-account">
+
+        <small *ngIf="transaction.isOutgoing">
+          Gönderilen
+        </small>
+
+        <small *ngIf="!transaction.isOutgoing">
+          Gelen
+        </small>
+
+        <p *ngIf="transaction.isOutgoing">ö
+          {{ transaction.targetIban }}
+        </p>
+
+        <p *ngIf="!transaction.isOutgoing">
+          {{ transaction.sourceIban }}
+        </p>
+
+      </div>
+
+
+      <div
+        class="transaction-amount"
+        [class.outgoing]="transaction.isOutgoing"
+        [class.incoming]="!transaction.isOutgoing">
+
+        {{ transaction.isOutgoing ? '-' : '+' }}
+
+        {{ transaction.amount | number:'1.2-2' }}
+
+        {{ transaction.currencySymbol }}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

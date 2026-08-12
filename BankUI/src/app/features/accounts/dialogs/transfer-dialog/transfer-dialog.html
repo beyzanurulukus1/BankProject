@@ -1,0 +1,94 @@
+<h2 mat-dialog-title>Para Transferi</h2>
+
+<div mat-dialog-content>
+
+  <div class="account-info">
+
+    <span class="label">Gönderen Hesap</span>
+
+    <strong>
+      {{ account.nickname || account.currencyCode + ' Hesabı' }}
+    </strong>
+
+    <span class="iban">
+      {{ account.iban }}
+    </span>
+
+    <span class="balance">
+      Kullanılabilir Bakiye:
+      {{ account.balance }} {{ account.currencyCode }}
+    </span>
+
+  </div>
+
+
+  <mat-form-field appearance="outline" class="full-width">
+
+    <mat-label>Alıcı IBAN</mat-label>
+
+    <input
+      matInput
+      type="text"
+      [(ngModel)]="targetIban"
+      placeholder="TR...">
+
+  </mat-form-field>
+
+
+  <mat-form-field appearance="outline" class="full-width">
+
+    <mat-label>Transfer Tutarı</mat-label>
+
+    <input
+      matInput
+      type="number"
+      [(ngModel)]="amount"
+      min="0"
+      step="0.01">
+
+    <span matTextSuffix>
+      {{ account.currencyCode }}
+    </span>
+
+  </mat-form-field>
+
+
+  <mat-form-field appearance="outline" class="full-width">
+
+    <mat-label>Açıklama</mat-label>
+
+    <textarea
+      matInput
+      rows="3"
+      [(ngModel)]="description"
+      placeholder="Transfer açıklaması">
+    </textarea>
+
+  </mat-form-field>
+
+</div>
+
+
+<div mat-dialog-actions align="end">
+
+  <button
+    mat-button
+    type="button"
+    (click)="close()">
+
+    Vazgeç
+
+  </button>
+
+
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="transfer()">
+
+    Transfer Et
+
+  </button>
+
+</div>

@@ -1,0 +1,47 @@
+<header class="topbar">
+  <div class="logo">BankUI</div>
+
+  <div class="user">
+    Hoş Geldiniz
+  </div>
+</header>
+
+<div class="container">
+
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+
+    <button class="menu-toggle" (click)="toggleSidebar()">
+      ☰
+    </button>
+
+    <nav>
+
+      <a routerLink="/dashboard">
+        <span class="icon">🏠</span>
+        <span class="label">Dashboard</span>
+      </a>
+
+      <a routerLink="/accounts">
+        <span class="icon">💳</span>
+        <span class="label">Hesaplarım</span>
+      </a>
+
+      <a routerLink="/history">
+        <span class="icon">📄</span>
+        <span class="label">İşlem Geçmişi</span>
+      </a>
+
+      <a routerLink="/profile">
+        <span class="icon">👤</span>
+        <span class="label">Profil</span>
+      </a>
+
+    </nav>
+
+  </aside>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>

@@ -1,0 +1,78 @@
+<div class="login-page">
+
+    <div class="left-panel">
+
+        <h1>BankUI</h1>
+
+        <p>
+
+            Güvenli internet bankacılığı deneyimine hoş geldiniz.
+
+        </p>
+
+    </div>
+
+    <div class="right-panel">
+
+        <mat-card>
+
+            <h2>Giriş Yap</h2>
+
+            <form [formGroup]="loginForm" (ngSubmit)="login()">
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>Email</mat-label>
+
+                    <input matInput type="email" formControlName="email">
+
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+
+                    <mat-label>Şifre</mat-label>
+
+                    <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+
+                    <button mat-icon-button matSuffix type="button" (click)="hidePassword=!hidePassword">
+
+                        <mat-icon>
+
+                            {{hidePassword ? 'visibility_off' : 'visibility'}}
+
+                        </mat-icon>
+
+                    </button>
+
+                </mat-form-field>
+
+                <mat-checkbox formControlName="remember">
+
+                    Beni Hatırla
+
+                </mat-checkbox>
+
+                <button mat-raised-button color="primary" type="submit" class="login-btn">
+
+                    Giriş Yap
+
+                </button>
+                <div class="register-link">
+
+                    Hesabınız yok mu?
+
+                    <button type="button" mat-button routerLink="/register">
+
+                        Kayıt Ol
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </mat-card>
+
+    </div>
+
+</div>

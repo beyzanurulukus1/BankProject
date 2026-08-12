@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>Yeni Hesap Aç</h2>
+
+<form [formGroup]="form">
+
+    <div mat-dialog-content>
+
+        <p>Lütfen oluşturmak istediğiniz hesap türünü seçiniz.</p>
+
+        <mat-radio-group formControlName="currencyId">
+
+            <mat-radio-button [value]="1">
+                Vadesiz TL Hesabı
+            </mat-radio-button>
+
+            <br><br>
+
+            <mat-radio-button [value]="2">
+                USD Hesabı
+            </mat-radio-button>
+
+            <br><br>
+
+            <mat-radio-button [value]="3">
+                EUR Hesabı
+            </mat-radio-button>
+
+        </mat-radio-group>
+
+        <br><br>
+
+        <mat-form-field appearance="outline" class="full-width">
+
+            <mat-label>Hesap Takma Adı</mat-label>
+
+            <input
+                matInput
+                formControlName="nickname">
+
+        </mat-form-field>
+
+    </div>
+
+    <div mat-dialog-actions align="end">
+
+        <button
+            mat-button
+            type="button"
+            (click)="close()">
+
+            İptal
+
+        </button>
+
+        <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            (click)="create()">
+
+            Oluştur
+
+        </button>
+
+    </div>
+
+</form>

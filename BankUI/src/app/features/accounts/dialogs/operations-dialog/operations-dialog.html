@@ -1,0 +1,49 @@
+<div class="operations-dialog">
+
+  <h2>İşlemler</h2>
+
+  <div class="account-info">
+    {{ account.nickname }}
+    <span>· {{ account.currencyCode }}</span>
+  </div>
+
+  <div class="operations">
+
+    <button
+      mat-raised-button
+      class="operation-button"
+      (click)="openDeposit()">
+      Para Yatır
+    </button>
+
+    <button
+      mat-raised-button
+      class="operation-button"
+      (click)="openWithdraw()">
+      Para Çek
+    </button>
+
+    <button
+      mat-raised-button
+      class="operation-button"
+      (click)="openTransfer()">
+      Para Transferi
+    </button>
+
+    <button
+      mat-raised-button
+      class="operation-button exchange-button"
+      (click)="openExchange()">
+      💱 Döviz Dönüştür
+    </button>
+
+  </div>
+
+  <button
+    mat-button
+    class="cancel-button"
+    (click)="close()">
+    Vazgeç
+  </button>
+
+</div>

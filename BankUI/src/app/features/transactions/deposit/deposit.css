@@ -1,0 +1,61 @@
+.deposit-container{
+
+    max-width:600px;
+    margin:40px auto;
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+
+}
+
+.account{
+
+    color:#777;
+    margin-bottom:25px;
+
+}
+
+.form-group{
+
+    display:flex;
+    flex-direction:column;
+    margin-bottom:20px;
+
+}
+
+label{
+
+    margin-bottom:8px;
+    font-weight:600;
+
+}
+
+input,
+textarea{
+
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:16px;
+
+}
+
+.deposit-btn{
+
+    width:100%;
+    padding:14px;
+    background:#1976d2;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+
+}
+
+.deposit-btn:hover{
+
+    background:#125ea7;
+
+}

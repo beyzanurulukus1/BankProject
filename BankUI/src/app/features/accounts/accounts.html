@@ -1,0 +1,258 @@
+<div class="accounts-page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Hesaplarım</h1>
+
+      <p class="subtitle">
+        Tüm banka hesaplarınızı buradan görüntüleyebilirsiniz.
+      </p>
+    </div>
+
+    <button
+      class="create-account-btn"
+      (click)="openCreateAccountDialog()">
+
+      + Yeni Hesap Aç
+
+    </button>
+
+  </div>
+
+
+  <div
+    class="account-grid"
+    *ngIf="accounts.length > 0; else noAccounts">
+
+    <div
+      class="account-card"
+      *ngFor="let account of accounts"
+      [class.passive-card]="account.status === 'PASSIVE'">
+
+      <!-- HEADER -->
+
+      <div class="card-header">
+
+        <div class="account-title">
+
+          <h2>
+            {{ account.nickname }}
+          </h2>
+
+          <p class="account-type">
+            {{ account.currencyCode }} Hesabı
+          </p>
+
+        </div>
+
+
+        <div class="header-right">
+
+          <span
+            class="status"
+            [class.active]="account.status === 'ACTIVE'"
+            [class.passive]="account.status === 'PASSIVE'">
+
+            {{ account.status }}
+
+          </span>
+
+
+          <button
+            mat-icon-button
+            [matMenuTriggerFor]="accountMenu">
+
+            <mat-icon>
+              more_vert
+            </mat-icon>
+
+          </button>
+
+
+          <mat-menu #accountMenu="matMenu">
+
+            <button
+              mat-menu-item
+              (click)="copyIban(account.iban)">
+
+              <mat-icon>
+                content_copy
+              </mat-icon>
+
+              <span>
+                IBAN Kopyala
+              </span>
+
+            </button>
+
+
+            <button
+              mat-menu-item
+              (click)="editNickname(account)">
+
+              <mat-icon>
+                edit
+              </mat-icon>
+
+              <span>
+                Takma Adı Düzenle
+              </span>
+
+            </button>
+
+
+            <button
+              mat-menu-item
+              (click)="deactivateAccount(account.accountId)"
+              [disabled]="account.status === 'PASSIVE'">
+
+              <mat-icon>
+                block
+              </mat-icon>
+
+              <span>
+                Hesabı Pasifleştir
+              </span>
+
+            </button>
+
+          </mat-menu>
+
+        </div>
+
+      </div>
+
+
+      <!-- IBAN -->
+
+      <div class="info">
+
+        <label>
+          IBAN
+        </label>
+
+        <div class="iban-row">
+
+          <p>
+            {{ account.iban }}
+          </p>
+
+          <button
+            class="copy-btn"
+            type="button"
+            (click)="copyIban(account.iban)">
+
+            📋
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- BALANCE -->
+
+      <div class="info">
+
+        <label>
+          Bakiye
+        </label>
+
+        <h1>
+
+          {{
+            account.balance
+              | currency:
+                account.currencyCode:
+                'symbol':
+                '1.2-2':
+                'tr'
+          }}
+
+        </h1>
+
+      </div>
+
+
+      <!-- ACTIONS -->
+
+      <div class="actions">
+
+        <button
+          class="action-btn"
+          type="button"
+          [disabled]="account.status === 'PASSIVE'"
+          (click)="openOperationsDialog(account)">
+
+          ⚙️ İşlemler
+
+        </button>
+
+
+        <button
+          class="action-btn"
+          type="button"
+          (click)="goToHistory(account.accountId)">
+
+          📄 Hareketler
+
+        </button>
+
+      </div>
+
+
+      <!-- NICKNAME -->
+
+      <button
+        class="nickname-btn"
+        type="button"
+        (click)="editNickname(account)">
+
+        <mat-icon>
+          edit
+        </mat-icon>
+
+        <span>
+          Takma Adı Düzenle
+        </span>
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- NO ACCOUNTS -->
+
+  <ng-template #noAccounts>
+
+    <div class="empty-state">
+
+      <div class="empty-icon">
+        💳
+      </div>
+
+      <h2>
+        Henüz hesabınız bulunmuyor
+      </h2>
+
+      <p>
+        Yeni bir banka hesabı açarak başlayabilirsiniz.
+      </p>
+
+      <button
+        class="create-account-btn"
+        (click)="openCreateAccountDialog()">
+
+        + Yeni Hesap Aç
+
+      </button>
+
+    </div>
+
+  </ng-template>
+
+</div>

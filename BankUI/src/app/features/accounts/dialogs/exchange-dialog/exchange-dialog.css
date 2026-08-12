@@ -1,0 +1,85 @@
+.exchange-dialog {
+  padding: 8px;
+}
+
+.exchange-dialog h2 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.source-info {
+  background: #f7f7f7;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.source-title {
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+.source-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.source-details {
+  margin-top: 6px;
+  color: #666;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.rate-preview {
+  background: #fff8d8;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 8px 0 16px;
+}
+
+.rate-row,
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+}
+
+.result-row {
+  border-top: 1px solid #eadb87;
+  margin-top: 8px;
+  padding-top: 14px;
+  font-size: 17px;
+}
+
+.warning {
+  background: #fff3cd;
+  color: #856404;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 8px 0 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 30px 10px;
+  color: #777;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.exchange-submit-button {
+  background: #ffcb05 !important;
+  color: #222 !important;
+}

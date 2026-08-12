@@ -1,0 +1,89 @@
+
+@BankApi_HostAddress = http://localhost:5240
+
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkN1c3RvbWVyIiwiZXhwIjoxNzg1OTM3MDM0LCJpc3MiOiJCYW5rQXBpIiwiYXVkIjoiQmFua1VJIn0.SmVDGi9bJlIb5mI4xC2s0jSSIlDFQxBiNC2cIfpslpg
+POST {{BankApi_HostAddress}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Beyza",
+  "lastName": "Ulukuş",
+  "email": "beyza@test.com",
+  "password": "Password123!",
+  "tckn": "12345678901",
+  "phoneNumber": "05551112233",
+  "dateOfBirth": "2006-12-13T00:00:00.000Z"
+}
+### Kullanıcı Giriş Testi (Başarılı Senaryo)
+POST {{BankApi_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "beyza@test.com",
+  "password": "Password123!"
+}
+### 1. Token OLMADAN Korumalı Kapıyı Çalma (401 Red Almalıyız)
+GET http://localhost:5240/api/Test/protected
+
+###
+
+### 2. Token İLE Korumalı Kapıyı Çalma (200 OK Almalıyız)
+# NOT: Buradaki {{YOUR_TOKEN}} yerine Login olduğunda sana dönen o uzun eyJ... metnini yapıştır!
+GET http://localhost:5240/api/Test/protected
+Authorization: Bearer {{token}}
+
+### 3. Yeni Banka Hesabı Açma (TL Hesabı -> CurrencyId: 1)
+POST http://localhost:5240/api/Account/create
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "currencyId": 2
+}
+### Kullanıcının Hesaplarını Listele
+GET http://localhost:5240/api/account/my-accounts
+Authorization: Bearer {{token}}
+
+### Para Transferi
+
+POST http://localhost:5240/api/transaction/transfer
+Authorization: Bearer {{token}}
+
+Content-Type: application/json
+
+{
+  "sourceAccountId": 1,
+  "targetIban": "TR990006201208772620015768",
+  "amount": 250,
+  "description": "test transferi"
+}
+
+### 4. İşlem Geçmişi (Ekstre / History)
+GET http://localhost:5240/api/Transaction/history
+Authorization: Bearer {{token}}
+
+{
+  "userId": 1
+}
+
+### Para Yatırma
+POST http://localhost:5240/api/Transaction/deposit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "accountId": 1,
+  "amount": 1000,
+  "description": "ATM Para Yatırma Testi"
+}
+
+### Para Çekme
+POST http://localhost:5240/api/Transaction/withdraw
+Content-Type: application/json
+Authorization: Bearer  {{token}}
+
+{
+  "accountId": 1,
+  "amount": 250,
+  "description": "ATM Para Çekme Testi"
+}

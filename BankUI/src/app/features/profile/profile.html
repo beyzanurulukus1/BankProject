@@ -1,0 +1,153 @@
+<div *ngIf="loading">
+
+  <h2>Profil yükleniyor...</h2>
+
+</div>
+
+
+<div
+  class="profile-page"
+  *ngIf="!loading && profile">
+
+  <div class="page-header">
+
+    <h1>Profil</h1>
+
+    <p>
+      Kişisel bilgilerinizi buradan görüntüleyebilirsiniz.
+    </p>
+
+  </div>
+
+
+  <div class="profile-card">
+
+    <div class="profile-avatar">
+      {{ profile.firstName.charAt(0) }}
+    </div>
+
+    <div class="profile-name">
+
+      <h2>
+        {{ profile.firstName }}
+        {{ profile.lastName }}
+      </h2>
+
+      <span>Müşteri</span>
+
+    </div>
+
+  </div>
+
+
+  <div class="info-card">
+
+    <h2>Kişisel Bilgiler</h2>
+
+
+    <div class="info-grid">
+
+      <div class="info-item">
+
+        <label>Ad</label>
+
+        <span>
+          {{ profile.firstName }}
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+        <label>Soyad</label>
+
+        <span>
+          {{ profile.lastName }}
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+        <label>E-posta</label>
+
+        <span>
+          {{ profile.email }}
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+        <label>Telefon</label>
+
+        <span>
+          {{ profile.phoneNumber }}
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+        <label>Doğum Tarihi</label>
+
+        <span>
+          {{ profile.birthDate | date:'dd.MM.yyyy' }}
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="info-card">
+
+    <h2>Güvenlik Bilgileri</h2>
+
+    <div class="info-grid">
+
+      <div class="info-item">
+
+        <label>TCKN</label>
+
+        <span>
+          ********{{ profile.tckn.slice(-3) }}
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+        <label>Üyelik Tarihi</label>
+
+        <span>
+          {{ profile.createdAt | date:'dd.MM.yyyy' }}
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div
+  *ngIf="!loading && !profile"
+  class="error-message">
+
+  <h2>Profil bilgileri alınamadı.</h2>
+
+  <p>
+    Lütfen daha sonra tekrar deneyin.
+  </p>
+
+</div>
