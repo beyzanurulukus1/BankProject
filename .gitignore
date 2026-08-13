@@ -30,3 +30,6 @@
 # Local configuration
 **/appsettings.json
 **/appsettings.Development.json
+
+# Investment market data test service
+investment-api-test/node_modules/

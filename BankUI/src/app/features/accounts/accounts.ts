@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AccountService } from '../../core/services/account';
@@ -25,7 +25,7 @@ import { WithdrawDialog } from './dialogs/withdraw-dialog/withdraw-dialog';
 })
 
 export class AccountsComponent implements OnInit {
-
+  private cdr = inject(ChangeDetectorRef);
   private accountService = inject(AccountService);
   private dialog = inject(MatDialog);
   accounts: AccountResponse[] = [];
@@ -76,29 +76,31 @@ openCreateAccountDialog() {
     private router: Router
   ) {}
 
-  loadAccounts() {
+loadAccounts() {
 
-    this.accountService.getMyAccounts().subscribe({
+  this.accountService.getMyAccounts().subscribe({
 
-      next: (response) => {
+    next: (response) => {
 
-        console.log("HESAPLAR GELDİ");
-        console.log(response);
+      console.log("HESAPLAR GELDİ");
+      console.log(response);
 
-        this.accounts = response.data;
+      this.accounts = response.data;
 
-      },
+      this.cdr.detectChanges();
+    },
 
-      error: (err) => {
+    error: (err) => {
 
-        console.log("HESAPLAR GETİRİLEMEDİ");
-        console.log(err);
+      console.log("HESAPLAR GETİRİLEMEDİ");
+      console.log(err);
 
-      }
+      this.cdr.detectChanges();
+    }
 
-    });
+  });
 
-  }
+}
   goToDeposit(accountId: number) {
 
     this.router.navigate(['/deposit'], {

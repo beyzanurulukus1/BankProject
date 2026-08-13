@@ -1,7 +1,7 @@
 
 @BankApi_HostAddress = http://localhost:5240
 
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjYiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkN1c3RvbWVyIiwiZXhwIjoxNzg1OTM3MDM0LCJpc3MiOiJCYW5rQXBpIiwiYXVkIjoiQmFua1VJIn0.SmVDGi9bJlIb5mI4xC2s0jSSIlDFQxBiNC2cIfpslpg
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDdXN0b21lciIsImV4cCI6MTc4NjYyMjIwMCwiaXNzIjoiQmFua0FwaSIsImF1ZCI6IkJhbmtVSSJ9.3uE8KxK508yvONxTMLNa3npKlL_nRASfnRqePHKuufc
 POST {{BankApi_HostAddress}}/api/Auth/register
 Content-Type: application/json
 
@@ -19,8 +19,8 @@ POST {{BankApi_HostAddress}}/api/Auth/login
 Content-Type: application/json
 
 {
-  "email": "beyza@test.com",
-  "password": "Password123!"
+  "email": "beyza@gmail.com",
+  "password": "1111"
 }
 ### 1. Token OLMADAN Korumalı Kapıyı Çalma (401 Red Almalıyız)
 GET http://localhost:5240/api/Test/protected
@@ -87,3 +87,14 @@ Authorization: Bearer  {{token}}
   "amount": 250,
   "description": "ATM Para Çekme Testi"
 }
+
+### THYAO TEST
+
+GET http://localhost:5240/api/Investment/stock/THYAO
+Authorization: Bearer {{token}}
+
+
+### BIST 100 TEST
+
+GET http://localhost:5240/api/Investment/index/XU100
+Authorization: Bearer {{token}}

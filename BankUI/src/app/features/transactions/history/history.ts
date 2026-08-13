@@ -1,8 +1,14 @@
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
+
 import { TransactionService } from '../../../core/services/transaction';
 import { TransactionHistory } from '../../../core/models/transaction-history';
-// Local minimal type to avoid import path issues
 
 @Component({
   selector: 'app-history',
@@ -16,8 +22,10 @@ import { TransactionHistory } from '../../../core/models/transaction-history';
 export class HistoryComponent implements OnInit {
 
   private transactionService = inject(TransactionService);
+  private cdr = inject(ChangeDetectorRef);
 
   transactions: TransactionHistory[] = [];
+
   loading = true;
 
   ngOnInit(): void {
@@ -34,8 +42,10 @@ export class HistoryComponent implements OnInit {
         console.log(response);
 
         this.transactions = response.data;
+
         this.loading = false;
 
+        this.cdr.detectChanges();
       },
 
       error: (err) => {
@@ -45,10 +55,10 @@ export class HistoryComponent implements OnInit {
 
         this.loading = false;
 
+        this.cdr.detectChanges();
       }
 
     });
-
   }
 
   getTransactionName(type: string): string {
@@ -64,11 +74,12 @@ export class HistoryComponent implements OnInit {
       case 'TRANSFER':
         return 'Transfer';
 
+      case 'EXCHANGE':
+        return 'Döviz Dönüşümü';
+
       default:
         return type;
-
     }
-
   }
 
 }

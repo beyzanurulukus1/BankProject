@@ -1,0 +1,173 @@
+<div class="investment-page">
+
+  <div class="page-header">
+    <div>
+      <h1>Yatırımlar</h1>
+      <p>BIST piyasalarını ve güncel hisse fiyatlarını takip edebilirsiniz.</p>
+    </div>
+  </div>
+
+
+  <!-- BIST 100 -->
+
+  <section
+    *ngIf="!loading && index"
+    class="index-card">
+
+    <div class="index-main">
+      <span class="index-label">BIST 100</span>
+
+      <div class="index-value">
+        {{ index.value | number:'1.2-2' }}
+      </div>
+    </div>
+
+    <div
+      class="index-change"
+      [class.positive]="isPositive(index.change)"
+      [class.negative]="!isPositive(index.change)">
+
+      {{ isPositive(index.change) ? '+' : '' }}
+      {{ index.change | number:'1.2-2' }}
+
+      <span>
+        ({{ formatPercent(index.changePercent) }})
+      </span>
+    </div>
+
+  </section>
+
+
+  <!-- STATES -->
+
+  <div
+    *ngIf="loading"
+    class="state-card">
+
+    <div class="state-title">
+      Piyasa verileri yükleniyor...
+    </div>
+
+    <div class="state-subtitle">
+      Güncel BIST verileri alınıyor.
+    </div>
+
+  </div>
+
+
+  <div
+    *ngIf="!loading && errorMessage"
+    class="state-card error-state">
+
+    <div class="state-title">
+      Piyasa verileri alınamadı
+    </div>
+
+    <div class="state-subtitle">
+      {{ errorMessage }}
+    </div>
+
+  </div>
+
+
+  <!-- POPULAR STOCKS -->
+
+  <section
+    *ngIf="!loading && !errorMessage"
+    class="stocks-section">
+
+    <div class="section-header">
+
+      <div>
+        <h2>Popüler Hisseler</h2>
+        <p>Güncel piyasa verileri</p>
+      </div>
+
+    </div>
+
+
+    <div class="stock-grid">
+
+      <button
+        type="button"
+        class="stock-card"
+        *ngFor="let stock of stocks"
+        (click)="openStockDetail(stock)">
+
+        <div class="stock-header">
+
+          <div>
+            <div class="stock-symbol">
+              {{ stock.symbol }}
+            </div>
+
+            <div class="stock-name">
+              {{ stock.name }}
+            </div>
+          </div>
+
+          <div
+            class="stock-status"
+            [class.positive]="isPositive(stock.change)"
+            [class.negative]="!isPositive(stock.change)">
+
+            {{ isPositive(stock.change) ? '▲' : '▼' }}
+
+          </div>
+
+        </div>
+
+
+        <div class="stock-price">
+          {{ stock.price | number:'1.2-2' }} ₺
+        </div>
+
+
+        <div
+          class="stock-change"
+          [class.positive]="isPositive(stock.change)"
+          [class.negative]="!isPositive(stock.change)">
+
+          {{ isPositive(stock.change) ? '+' : '' }}
+          {{ stock.change | number:'1.2-2' }} ₺
+
+          <span>
+            ({{ formatPercent(stock.changePercent) }})
+          </span>
+
+        </div>
+
+
+        <div class="stock-divider"></div>
+
+
+        <div class="stock-summary">
+
+          <div>
+            <span>Günlük yüksek</span>
+            <strong>
+              {{ stock.high | number:'1.2-2' }} ₺
+            </strong>
+          </div>
+
+          <div>
+            <span>Günlük düşük</span>
+            <strong>
+              {{ stock.low | number:'1.2-2' }} ₺
+            </strong>
+          </div>
+
+        </div>
+
+
+        <div class="view-detail">
+          Detayları görüntüle →
+        </div>
+
+      </button>
+
+    </div>
+
+  </section>
+
+</div>

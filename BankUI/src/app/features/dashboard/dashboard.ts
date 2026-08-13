@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -7,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { DashboardService } from '../../core/services/dashboard';
 import { DashboardResponse } from '../../core/models/dashboard-response';
+
 import {
   ExchangeRateService,
   ExchangeRate
@@ -25,6 +32,8 @@ import {
   styleUrls: ['./dashboard.css']
 })
 export class DashboardComponent implements OnInit {
+
+  private cdr = inject(ChangeDetectorRef);
 
   dashboard: DashboardResponse | null = null;
 
@@ -58,6 +67,8 @@ export class DashboardComponent implements OnInit {
         this.dashboard = response.data;
 
         this.loading = false;
+
+        this.cdr.detectChanges();
       },
 
       error: (err) => {
@@ -65,6 +76,8 @@ export class DashboardComponent implements OnInit {
         console.error('❌ Dashboard yüklenemedi', err);
 
         this.loading = false;
+
+        this.cdr.detectChanges();
       }
 
     });
@@ -81,11 +94,15 @@ export class DashboardComponent implements OnInit {
         console.log('✅ KURLAR', response);
 
         this.exchangeRates = response.data;
+
+        this.cdr.detectChanges();
       },
 
       error: (err) => {
 
         console.error('❌ KUR HATASI', err);
+
+        this.cdr.detectChanges();
       }
 
     });
@@ -103,6 +120,9 @@ export class DashboardComponent implements OnInit {
 
       case 'TRANSFER':
         return 'Transfer';
+
+      case 'EXCHANGE':
+        return 'Döviz Dönüşümü';
 
       default:
         return type;

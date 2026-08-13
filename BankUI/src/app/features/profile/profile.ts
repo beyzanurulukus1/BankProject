@@ -1,4 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
@@ -26,6 +32,7 @@ interface ProfileResponse {
 export class ProfileComponent implements OnInit {
 
   private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
 
   profile: ProfileResponse | null = null;
 
@@ -37,10 +44,11 @@ export class ProfileComponent implements OnInit {
 
   loadProfile(): void {
 
-    this.http.get<{
-      isSuccess: boolean;
-      data: ProfileResponse;
-    }>(`${environment.apiUrl}/Profile`)
+    this.http
+      .get<{
+        isSuccess: boolean;
+        data: ProfileResponse;
+      }>(`${environment.apiUrl}/Profile`)
       .subscribe({
 
         next: (response) => {
@@ -49,8 +57,10 @@ export class ProfileComponent implements OnInit {
           console.log(response);
 
           this.profile = response.data;
+
           this.loading = false;
 
+          this.cdr.detectChanges();
         },
 
         error: (err) => {
@@ -60,10 +70,10 @@ export class ProfileComponent implements OnInit {
 
           this.loading = false;
 
+          this.cdr.detectChanges();
         }
 
       });
-
   }
 
 }

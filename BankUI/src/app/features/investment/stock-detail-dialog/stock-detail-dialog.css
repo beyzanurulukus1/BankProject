@@ -1,0 +1,97 @@
+:host {
+  display: block;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding: 24px 24px 10px;
+}
+
+.dialog-symbol {
+  font-size: 26px;
+  font-weight: 750;
+}
+
+.dialog-name {
+  margin-top: 5px;
+  color: #888;
+  font-size: 13px;
+  max-width: 380px;
+}
+
+.price-section {
+  padding: 12px 24px 24px;
+}
+
+.current-price {
+  font-size: 38px;
+  font-weight: 750;
+  color: #222;
+}
+
+.price-change {
+  margin-top: 5px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.price-change span {
+  margin-left: 4px;
+  font-size: 13px;
+}
+
+.positive {
+  color: #198754;
+}
+
+.negative {
+  color: #dc3545;
+}
+
+.stats-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 14px;
+
+  padding: 0 24px;
+}
+
+.stat {
+  padding: 16px;
+
+  background: #f7f8fa;
+
+  border-radius: 14px;
+}
+
+.stat span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #888;
+
+  font-size: 12px;
+}
+
+.stat strong {
+  color: #222;
+  font-size: 15px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.updated {
+  padding: 18px 24px 24px;
+
+  color: #999;
+
+  font-size: 12px;
+}

@@ -14,6 +14,7 @@ import { WithdrawComponent } from './features/transactions/withdraw/withdraw';
 import { HistoryComponent } from './features/transactions/history/history';
 
 import { ProfileComponent } from './features/profile/profile';
+import { InvestmentComponent } from './features/investment/investment';
 
 export const routes: Routes = [
 
@@ -71,7 +72,11 @@ export const routes: Routes = [
       {
         path: 'profile',
         component: ProfileComponent
-      }
+      },
+      {
+  path: 'investment',
+  component: InvestmentComponent
+},
 
     ]
   },
@@ -80,5 +85,6 @@ export const routes: Routes = [
     path: '**',
     redirectTo: 'login'
   }
+  
 
 ];

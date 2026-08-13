@@ -61,6 +61,7 @@ builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<ExchangeRateService>();
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<InvestmentService>();
 
 var app = builder.Build();
 
