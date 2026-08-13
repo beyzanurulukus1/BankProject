@@ -39,7 +39,32 @@ app.get('/api/market/index/:symbol', async (req, res) => {
     });
   }
 });
+app.get('/api/market/history/:symbol', async (req, res) => {
+  try {
+    const symbol = req.params.symbol;
 
+    const period = req.query.period || '1mo';
+    const interval = req.query.interval || '1d';
+
+    const history = await api.getHistoricalData(symbol, {
+      period,
+      interval
+    });
+
+    res.json({
+      isSuccess: true,
+      data: history
+    });
+
+  } catch (error) {
+    console.error('Historical data error:', error);
+
+    res.status(500).json({
+      isSuccess: false,
+      message: 'Geçmiş fiyat verisi alınamadı.'
+    });
+  }
+});
 app.listen(3001, () => {
   console.log('📈 Market Data Service: http://localhost:3001');
 });

@@ -112,5 +112,45 @@
     {{ stock.timestamp | date:'dd.MM.yyyy HH:mm:ss' }}
 
   </div>
+<div class="chart-periods">
 
+  <button
+    type="button"
+    (click)="changePeriod('5d')">
+
+    5G
+
+  </button>
+
+  <button
+    type="button"
+    (click)="changePeriod('1mo')">
+
+    1A
+
+  </button>
+
+  <button
+    type="button"
+    (click)="changePeriod('3mo')">
+
+    3A
+
+  </button>
+
+  <button
+    type="button"
+    (click)="changePeriod('1y')">
+
+    1Y
+
+  </button>
+
+</div>
+
+<div class="chart-container">
+
+  <canvas id="stockChart"></canvas>
+
+</div>
 </mat-dialog-content>

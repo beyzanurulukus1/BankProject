@@ -1,7 +1,7 @@
 
 @BankApi_HostAddress = http://localhost:5240
 
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDdXN0b21lciIsImV4cCI6MTc4NjYyMjIwMCwiaXNzIjoiQmFua0FwaSIsImF1ZCI6IkJhbmtVSSJ9.3uE8KxK508yvONxTMLNa3npKlL_nRASfnRqePHKuufc
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDdXN0b21lciIsImV4cCI6MTc4NjYzMzEzNywiaXNzIjoiQmFua0FwaSIsImF1ZCI6IkJhbmtVSSJ9.Wo-g5dTcxIhEqZjYPesegxST3_cCgTKg0p4XZRPCtDY
 POST {{BankApi_HostAddress}}/api/Auth/register
 Content-Type: application/json
 
@@ -98,3 +98,23 @@ Authorization: Bearer {{token}}
 
 GET http://localhost:5240/api/Investment/index/XU100
 Authorization: Bearer {{token}}
+### THYAO HISTORY
+
+GET http://localhost:5240/api/Investment/history/THYAO?period=1mo&interval=1d
+Authorization: Bearer {{token}}
+
+### Investment Account
+
+GET http://localhost:5240/api/Investment/account
+Authorization: Bearer {{token}}
+
+### Yatırım hesabına para aktar
+
+POST http://localhost:5240/api/Investment/deposit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "sourceAccountId": 2,
+  "amount": 1000
+}

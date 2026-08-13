@@ -1,7 +1,10 @@
 using BankApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Security.Claims;
+using System.Security.Claims;
+ using Npgsql;
+using BankApi.Dtos;
 namespace BankApi.Controllers
 {
     [ApiController]
@@ -77,6 +80,143 @@ namespace BankApi.Controllers
                 {
                     isSuccess = false,
                     message = "Endeks verisi alınamadı.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpGet("history/{symbol}")]
+        public async Task<IActionResult> GetHistory(
+    string symbol,
+    [FromQuery] string period = "1mo",
+    [FromQuery] string interval = "1d")
+        {
+            try
+            {
+                var history =
+                    await _investmentService.GetHistoricalDataAsync(
+                        symbol,
+                        period,
+                        interval);
+
+                return Ok(new
+                {
+                    isSuccess = true,
+                    data = history
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    isSuccess = false,
+                    message = "Geçmiş fiyat verisi alınamadı.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpGet("account")]
+        public async Task<IActionResult> GetInvestmentAccount()
+        {
+            try
+            {
+                var userIdClaim =
+                    User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? User.FindFirst("sub")?.Value
+                    ?? User.FindFirst("unique_name")?.Value;
+
+                if (!int.TryParse(userIdClaim, out var userId))
+                {
+                    return Unauthorized(new
+                    {
+                        isSuccess = false,
+                        message = "Kullanıcı kimliği alınamadı."
+                    });
+                }
+
+                var account =
+                    await _investmentService
+                        .GetOrCreateInvestmentAccountAsync(userId);
+
+                return Ok(new
+                {
+                    isSuccess = true,
+                    data = account
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    isSuccess = false,
+                    message = "Yatırım hesabı alınamadı.",
+                    error = ex.Message
+                });
+            }
+        }
+        [HttpPost("deposit")]
+        public async Task<IActionResult> DepositToInvestment(
+            [FromBody] InvestmentDepositRequest request)
+        {
+            try
+            {
+                if (request.Amount <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        isSuccess = false,
+                        message = "Aktarım tutarı sıfırdan büyük olmalıdır."
+                    });
+                }
+
+                var userIdClaim =
+                    User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? User.FindFirst("sub")?.Value;
+
+                if (!int.TryParse(userIdClaim, out var userId))
+                {
+                    return Unauthorized(new
+                    {
+                        isSuccess = false,
+                        message = "Kullanıcı kimliği alınamadı."
+                    });
+                }
+
+                var account =
+                    await _investmentService.TransferToInvestmentAccountAsync(
+                        userId,
+                        request.SourceAccountId,
+                        request.Amount);
+
+                if (account == null)
+                {
+                    return BadRequest(new
+                    {
+                        isSuccess = false,
+                        message = "Para aktarımı gerçekleştirilemedi."
+                    });
+                }
+
+                return Ok(new
+                {
+                    isSuccess = true,
+                    data = account,
+                    message = "Para yatırım hesabına aktarıldı."
+                });
+            }
+            catch (PostgresException ex)
+            {
+                return BadRequest(new
+                {
+                    isSuccess = false,
+                    message = ex.MessageText
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    isSuccess = false,
+                    message = "Para aktarımı sırasında hata oluştu.",
                     error = ex.Message
                 });
             }

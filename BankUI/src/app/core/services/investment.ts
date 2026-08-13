@@ -27,6 +27,14 @@ export interface MarketIndex {
   volume: number;
   timestamp: string;
 }
+export interface HistoricalPrice {
+  date: string;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  close: number | null;
+  volume: number | null;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -54,4 +62,17 @@ export class InvestmentService {
       `${environment.apiUrl}/Investment/index/${symbol}`
     );
   }
+  getHistoricalData(
+  symbol: string,
+  period: string = '1mo',
+  interval: string = '1d'
+) {
+  return this.http.get<{
+    isSuccess: boolean;
+    data: HistoricalPrice[];
+    message?: string;
+  }>(
+    `${environment.apiUrl}/Investment/history/${symbol}?period=${period}&interval=${interval}`
+  );
+}
 }

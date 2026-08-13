@@ -986,3 +986,213 @@ BEGIN
 
 END;
 $$;
+CREATE TABLE investment_accounts (
+    id SERIAL PRIMARY KEY,
+
+    user_id INTEGER NOT NULL,
+
+    cash_balance NUMERIC(18,2) NOT NULL DEFAULT 0,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_investment_account_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT uq_investment_account_user
+        UNIQUE (user_id),
+
+    CONSTRAINT chk_investment_cash_balance
+        CHECK (cash_balance >= 0)
+);
+CREATE TABLE portfolio_positions (
+    id SERIAL PRIMARY KEY,
+
+    investment_account_id INTEGER NOT NULL,
+
+    symbol VARCHAR(20) NOT NULL,
+
+    quantity NUMERIC(18,4) NOT NULL DEFAULT 0,
+
+    average_cost NUMERIC(18,4) NOT NULL DEFAULT 0,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_portfolio_investment_account
+        FOREIGN KEY (investment_account_id)
+        REFERENCES investment_accounts(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT uq_portfolio_symbol
+        UNIQUE (investment_account_id, symbol),
+
+    CONSTRAINT chk_portfolio_quantity
+        CHECK (quantity >= 0),
+
+    CONSTRAINT chk_portfolio_average_cost
+        CHECK (average_cost >= 0)
+);
+CREATE TABLE investment_transactions (
+    id SERIAL PRIMARY KEY,
+
+    investment_account_id INTEGER NOT NULL,
+
+    symbol VARCHAR(20) NOT NULL,
+
+    transaction_type VARCHAR(10) NOT NULL,
+
+    quantity NUMERIC(18,4) NOT NULL,
+
+    price NUMERIC(18,4) NOT NULL,
+
+    total_amount NUMERIC(18,2) NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_investment_transaction_account
+        FOREIGN KEY (investment_account_id)
+        REFERENCES investment_accounts(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_investment_transaction_type
+        CHECK (transaction_type IN ('BUY', 'SELL')),
+
+    CONSTRAINT chk_investment_transaction_quantity
+        CHECK (quantity > 0),
+
+    CONSTRAINT chk_investment_transaction_price
+        CHECK (price > 0),
+
+    CONSTRAINT chk_investment_transaction_total
+        CHECK (total_amount > 0)
+);
+CREATE OR REPLACE FUNCTION fn_get_or_create_investment_account(
+    p_user_id INTEGER
+)
+RETURNS TABLE (
+    id INTEGER,
+    user_id INTEGER,
+    cash_balance NUMERIC,
+    created_at TIMESTAMP
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+    RETURN QUERY
+    SELECT
+        ia.id,
+        ia.user_id,
+        ia.cash_balance,
+        ia.created_at
+    FROM investment_accounts AS ia
+    WHERE ia.user_id = p_user_id;
+
+    IF FOUND THEN
+        RETURN;
+    END IF;
+
+    INSERT INTO investment_accounts (
+        user_id,
+        cash_balance
+    )
+    VALUES (
+        p_user_id,
+        0
+    )
+    ON CONFLICT ON CONSTRAINT uq_investment_account_user
+    DO NOTHING;
+
+    RETURN QUERY
+    SELECT
+        ia.id,
+        ia.user_id,
+        ia.cash_balance,
+        ia.created_at
+    FROM investment_accounts AS ia
+    WHERE ia.user_id = p_user_id;
+
+END;
+$$;
+CREATE OR REPLACE FUNCTION fn_transfer_to_investment_account(
+    p_user_id INTEGER,
+    p_source_account_id INTEGER,
+    p_amount NUMERIC
+)
+RETURNS TABLE (
+    investment_account_id INTEGER,
+    source_account_id INTEGER,
+    new_source_balance NUMERIC,
+    new_investment_balance NUMERIC,
+    message VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_investment_account_id INTEGER;
+    v_source_balance NUMERIC;
+BEGIN
+
+    -- Tutar kontrolü
+    IF p_amount <= 0 THEN
+        RAISE EXCEPTION 'Aktarılacak tutar sıfırdan büyük olmalıdır.';
+    END IF;
+
+    -- Kaynak hesabın kullanıcıya ait olup olmadığını,
+    -- aktif olduğunu ve TRY hesabı olduğunu kontrol et
+    SELECT
+        a.balance
+    INTO
+        v_source_balance
+    FROM accounts AS a
+    INNER JOIN customers AS c
+        ON c.id = a.customer_id
+    INNER JOIN currencies AS cu
+        ON cu.id = a.currency_id
+    WHERE a.id = p_source_account_id
+      AND c.user_id = p_user_id
+      AND cu.code = 'TRY'
+      AND a.status = 'ACTIVE';
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            'Kaynak hesap bulunamadı, kullanıcıya ait değil, aktif değil veya TRY hesabı değil.';
+    END IF;
+
+    -- Bakiye kontrolü
+    IF v_source_balance < p_amount THEN
+        RAISE EXCEPTION 'Yetersiz bakiye.';
+    END IF;
+
+    -- Yatırım hesabını garanti et
+    SELECT ia.id
+    INTO v_investment_account_id
+    FROM fn_get_or_create_investment_account(p_user_id) AS ia;
+
+    -- Banka hesabından düş
+    UPDATE accounts AS a
+    SET balance = balance - p_amount
+    WHERE a.id = p_source_account_id;
+
+    -- Yatırım hesabına ekle
+    UPDATE investment_accounts AS ia
+    SET cash_balance = cash_balance + p_amount
+    WHERE ia.id = v_investment_account_id;
+
+    -- Güncel bakiyeleri döndür
+    RETURN QUERY
+    SELECT
+        v_investment_account_id,
+        p_source_account_id,
+        a.balance,
+        ia.cash_balance,
+        'Yatırım hesabına para aktarımı başarılı.'::VARCHAR
+    FROM accounts AS a
+    CROSS JOIN investment_accounts AS ia
+    WHERE a.id = p_source_account_id
+      AND ia.id = v_investment_account_id;
+
+END;
+$$;
