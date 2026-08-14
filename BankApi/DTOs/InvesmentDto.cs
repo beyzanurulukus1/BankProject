@@ -75,4 +75,58 @@ public class InvestmentDepositRequest
     public int SourceAccountId { get; set; }
     public decimal Amount { get; set; }
 }
+public class BuyStockRequest
+    {
+        public string Symbol { get; set;}=string.Empty;
+        public decimal Quantity { get; set;}
+    }
+    public class InvestmentBuyResultDto
+{
+    public int InvestmentAccountId { get; set; }
+
+    public string Symbol { get; set; } = string.Empty;
+
+    public decimal BoughtQuantity { get; set; }
+
+    public decimal Price { get; set; }
+
+    public decimal TotalAmount { get; set; }
+
+    public decimal NewCashBalance { get; set; }
+
+    public decimal PortfolioQuantity { get; set; }
+
+    public decimal AverageCost { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+}
+public class PortfolioPositionDto
+    {
+        public string Symbol { get; set; } = string.Empty;
+
+        public decimal Quantity { get; set; }
+
+        public decimal AverageCost { get; set; }
+
+        public decimal CurrentPrice { get; set; }
+
+        public decimal TotalCost { get; set; }
+
+        public decimal CurrentValue { get; set; }
+
+        public decimal ProfitLoss { get; set; }
+        public decimal ProfitLossPercent { get; set; }
+    }
+    public class PortfolioDto
+    {
+        public int InvestmentAccountId { get; set; }
+
+        public decimal CashBalance { get; set; }
+        public decimal TotalCost { get; set; }
+        public decimal TotalValue { get; set; }
+        public decimal TotalProfitLoss { get; set; }
+        public decimal TotalProfitLossPercent { get; set; }
+
+        public List<PortfolioPositionDto> Positions { get; set; } = new();
+    }
 }

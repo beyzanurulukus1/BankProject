@@ -1,7 +1,8 @@
 
 @BankApi_HostAddress = http://localhost:5240
 
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDdXN0b21lciIsImV4cCI6MTc4NjYzMzEzNywiaXNzIjoiQmFua0FwaSIsImF1ZCI6IkJhbmtVSSJ9.Wo-g5dTcxIhEqZjYPesegxST3_cCgTKg0p4XZRPCtDY
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDdXN0b21lciIsImV4cCI6MTc4NjcwODM2NSwiaXNzIjoiQmFua0FwaSIsImF1ZCI6IkJhbmtVSSJ9.w6eljKLivkK078wzZlcgJzE3oK28fTH4oihbNi_cFkU
+
 POST {{BankApi_HostAddress}}/api/Auth/register
 Content-Type: application/json
 
@@ -118,3 +119,18 @@ Authorization: Bearer {{token}}
   "sourceAccountId": 2,
   "amount": 1000
 }
+### BUY THYAO
+
+POST http://localhost:5240/api/Investment/buy
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symbol": "THYAO",
+  "quantity": 1
+}
+
+### Portfolio
+
+GET http://localhost:5240/api/Investment/portfolio
+Authorization: Bearer {{token}}

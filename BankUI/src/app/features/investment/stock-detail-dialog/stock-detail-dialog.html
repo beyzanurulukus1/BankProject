@@ -147,6 +147,73 @@
   </button>
 
 </div>
+<div class="buy-section">
+
+  <div class="buy-title">
+    Hisse Satın Al
+  </div>
+
+  <div class="buy-input">
+
+    <label>
+      Adet
+    </label>
+
+    <input
+      type="number"
+      min="1"
+      step="1"
+      [formControl]="buyForm.controls.quantity">
+
+  </div>
+
+
+  <div class="buy-info">
+
+    <div>
+      <span>
+        Güncel fiyat
+      </span>
+
+      <strong>
+        {{ stock.price | number:'1.2-2' }} ₺
+      </strong>
+    </div>
+
+
+    <div>
+      <span>
+        Tahmini toplam
+      </span>
+
+      <strong>
+        {{ estimatedTotal | number:'1.2-2' }} ₺
+      </strong>
+    </div>
+
+  </div>
+
+
+  <div
+    *ngIf="errorMessage"
+    class="buy-error">
+
+    {{ errorMessage }}
+
+  </div>
+
+
+  <button
+    type="button"
+    class="buy-button"
+    [disabled]="!canBuy"
+    (click)="buy()">
+
+    {{ submitting ? 'Satın alınıyor...' : 'Satın Al' }}
+
+  </button>
+
+</div>
 
 <div class="chart-container">
 

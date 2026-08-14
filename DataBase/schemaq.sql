@@ -1195,4 +1195,164 @@ BEGIN
       AND ia.id = v_investment_account_id;
 
 END;
+$$;CREATE OR REPLACE FUNCTION fn_buy_stock(
+    p_user_id INTEGER,
+    p_symbol VARCHAR,
+    p_quantity NUMERIC,
+    p_price NUMERIC
+)
+RETURNS TABLE (
+    investment_account_id INTEGER,
+    symbol VARCHAR,
+    bought_quantity NUMERIC,
+    price NUMERIC,
+    total_amount NUMERIC,
+    new_cash_balance NUMERIC,
+    portfolio_quantity NUMERIC,
+    average_cost NUMERIC,
+    message VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_account_id INTEGER;
+    v_cash_balance NUMERIC;
+    v_total_amount NUMERIC;
+
+    v_existing_quantity NUMERIC;
+    v_existing_average_cost NUMERIC;
+
+    v_new_quantity NUMERIC;
+    v_new_average_cost NUMERIC;
+BEGIN
+
+    -- Temel kontroller
+    IF p_quantity <= 0 THEN
+        RAISE EXCEPTION 'Hisse adedi sıfırdan büyük olmalıdır.';
+    END IF;
+
+    IF p_price <= 0 THEN
+        RAISE EXCEPTION 'Hisse fiyatı sıfırdan büyük olmalıdır.';
+    END IF;
+
+    -- Toplam işlem tutarı
+    v_total_amount := p_quantity * p_price;
+
+    -- Kullanıcının yatırım hesabını kilitleyerek al
+    SELECT
+        ia.id,
+        ia.cash_balance
+    INTO
+        v_account_id,
+        v_cash_balance
+    FROM investment_accounts AS ia
+    WHERE ia.user_id = p_user_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Yatırım hesabı bulunamadı.';
+    END IF;
+
+    -- Bakiye kontrolü
+    IF v_cash_balance < v_total_amount THEN
+        RAISE EXCEPTION 'Yetersiz yatırım hesabı bakiyesi.';
+    END IF;
+
+    -- Mevcut portföy pozisyonunu kilitle
+    SELECT
+        pp.quantity,
+        pp.average_cost
+    INTO
+        v_existing_quantity,
+        v_existing_average_cost
+    FROM portfolio_positions AS pp
+    WHERE pp.investment_account_id = v_account_id
+      AND pp.symbol = p_symbol
+    FOR UPDATE;
+
+    -- Yeni pozisyon
+    IF NOT FOUND THEN
+
+        v_new_quantity := p_quantity;
+        v_new_average_cost := p_price;
+
+        INSERT INTO portfolio_positions (
+            investment_account_id,
+            symbol,
+            quantity,
+            average_cost
+        )
+        VALUES (
+            v_account_id,
+            p_symbol,
+            v_new_quantity,
+            v_new_average_cost
+        );
+
+    ELSE
+
+        v_new_quantity :=
+            v_existing_quantity + p_quantity;
+
+        v_new_average_cost :=
+            (
+                (v_existing_quantity * v_existing_average_cost)
+                +
+                (p_quantity * p_price)
+            )
+            / v_new_quantity;
+
+        UPDATE portfolio_positions AS pp
+        SET
+            quantity = v_new_quantity,
+            average_cost = v_new_average_cost,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE pp.investment_account_id = v_account_id
+          AND pp.symbol = p_symbol;
+
+    END IF;
+
+    -- Yatırım hesabından parayı düş
+    UPDATE investment_accounts AS ia
+    SET cash_balance = cash_balance - v_total_amount
+    WHERE ia.id = v_account_id;
+
+    -- BUY transaction kaydı
+    INSERT INTO investment_transactions (
+        investment_account_id,
+        symbol,
+        transaction_type,
+        quantity,
+        price,
+        total_amount
+    )
+    VALUES (
+        v_account_id,
+        p_symbol,
+        'BUY',
+        p_quantity,
+        p_price,
+        v_total_amount
+    );
+
+    -- Güncel bakiyeyi al
+    SELECT ia.cash_balance
+    INTO v_cash_balance
+    FROM investment_accounts AS ia
+    WHERE ia.id = v_account_id;
+
+    -- Sonucu döndür
+    RETURN QUERY
+    SELECT
+        v_account_id,
+        p_symbol,
+        p_quantity,
+        p_price,
+        v_total_amount,
+        v_cash_balance,
+        v_new_quantity,
+        v_new_average_cost,
+        'Hisse satın alma işlemi başarılı.'::VARCHAR;
+
+END;
 $$;

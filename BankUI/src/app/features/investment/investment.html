@@ -1,11 +1,239 @@
 <div class="investment-page">
 
+  <!-- HEADER -->
+
   <div class="page-header">
     <div>
       <h1>Yatırımlar</h1>
-      <p>BIST piyasalarını ve güncel hisse fiyatlarını takip edebilirsiniz.</p>
+
+      <p>
+        BIST piyasalarını ve güncel hisse fiyatlarını takip edebilirsiniz.
+      </p>
     </div>
   </div>
+
+
+  <!-- INVESTMENT ACCOUNT -->
+
+  <section
+    *ngIf="investmentAccount"
+    class="investment-account-card">
+
+    <div class="account-info">
+
+      <div class="account-label">
+        Yatırım Hesabım
+      </div>
+
+      <div class="account-balance">
+        {{ investmentAccount.cashBalance | number:'1.2-2' }} ₺
+      </div>
+
+      <div class="account-description">
+        Yatırım işlemlerinde kullanabileceğiniz nakit bakiye
+      </div>
+
+    </div>
+
+    <button
+      type="button"
+      class="deposit-button"
+      (click)="openDepositDialog()">
+
+      Para Aktar
+
+    </button>
+
+  </section>
+
+
+  <!-- PORTFÖY -->
+
+  <section
+    *ngIf="portfolio && portfolio.positions.length > 0"
+    class="portfolio-section">
+
+    <div class="section-header">
+
+      <div>
+
+        <h2>Portföyüm</h2>
+
+        <p>
+          Mevcut yatırımlarınız ve kâr/zarar durumunuz
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- PORTFÖY ÖZETİ -->
+
+    <div class="portfolio-summary">
+
+      <div class="portfolio-summary-card">
+
+        <span>
+          Toplam Portföy Değeri
+        </span>
+
+        <strong>
+          {{ portfolio.totalValue | number:'1.2-2' }} ₺
+        </strong>
+
+      </div>
+
+
+      <div class="portfolio-summary-card">
+
+        <span>
+          Toplam Maliyet
+        </span>
+
+        <strong>
+          {{ portfolio.totalCost | number:'1.2-2' }} ₺
+        </strong>
+
+      </div>
+
+
+      <div
+        class="portfolio-summary-card"
+        [class.profit]="portfolio.totalProfitLoss >= 0"
+        [class.loss]="portfolio.totalProfitLoss < 0">
+
+        <span>
+          Toplam Kâr / Zarar
+        </span>
+
+        <strong>
+
+          {{ portfolio.totalProfitLoss >= 0 ? '+' : '' }}
+
+          {{ portfolio.totalProfitLoss | number:'1.2-2' }} ₺
+
+        </strong>
+
+        <small>
+
+          {{ portfolio.totalProfitLoss >= 0 ? '+' : '' }}
+
+          {{ portfolio.totalProfitLossPercent | number:'1.2-2' }}%
+
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <!-- POZİSYONLAR -->
+
+    <div class="portfolio-positions">
+
+      <div
+        class="position-card"
+        *ngFor="let position of portfolio.positions">
+
+        <div class="position-header">
+
+          <div>
+
+            <h3>
+              {{ position.symbol }}
+            </h3>
+
+            <span>
+              {{ position.quantitiy | number:'1.0-4' }} adet
+            </span>
+
+          </div>
+
+
+          <div
+            class="position-profit"
+            [class.profit]="position.profitLoss >= 0"
+            [class.loss]="position.profitLoss < 0">
+
+            {{ position.profitLoss >= 0 ? '+' : '' }}
+
+            {{ position.profitLoss | number:'1.2-2' }} ₺
+
+            <small>
+
+              (
+              {{ position.profitLoss >= 0 ? '+' : '' }}
+              {{ position.profitLossPercent | number:'1.2-2' }}%
+              )
+
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="position-details">
+
+          <div>
+
+            <span>
+              Ortalama Maliyet
+            </span>
+
+            <strong>
+              {{ position.avarageCost | number:'1.2-2' }} ₺
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span>
+              Güncel Fiyat
+            </span>
+
+            <strong>
+              {{ position.currencyPrice | number:'1.2-2' }} ₺
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span>
+              Toplam Maliyet
+            </span>
+
+            <strong>
+              {{ position.totalCost | number:'1.2-2' }} ₺
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span>
+              Güncel Değer
+            </span>
+
+            <strong>
+              {{ position.currentValue | number:'1.2-2' }} ₺
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
 
 
   <!-- BIST 100 -->
@@ -15,12 +243,17 @@
     class="index-card">
 
     <div class="index-main">
-      <span class="index-label">BIST 100</span>
+
+      <span class="index-label">
+        BIST 100
+      </span>
 
       <div class="index-value">
         {{ index.value | number:'1.2-2' }}
       </div>
+
     </div>
+
 
     <div
       class="index-change"
@@ -28,17 +261,19 @@
       [class.negative]="!isPositive(index.change)">
 
       {{ isPositive(index.change) ? '+' : '' }}
+
       {{ index.change | number:'1.2-2' }}
 
       <span>
         ({{ formatPercent(index.changePercent) }})
       </span>
+
     </div>
 
   </section>
 
 
-  <!-- STATES -->
+  <!-- LOADING -->
 
   <div
     *ngIf="loading"
@@ -55,6 +290,8 @@
   </div>
 
 
+  <!-- ERROR -->
+
   <div
     *ngIf="!loading && errorMessage"
     class="state-card error-state">
@@ -70,7 +307,7 @@
   </div>
 
 
-  <!-- POPULAR STOCKS -->
+  <!-- POPÜLER HİSSELER -->
 
   <section
     *ngIf="!loading && !errorMessage"
@@ -79,8 +316,15 @@
     <div class="section-header">
 
       <div>
-        <h2>Popüler Hisseler</h2>
-        <p>Güncel piyasa verileri</p>
+
+        <h2>
+          Popüler Hisseler
+        </h2>
+
+        <p>
+          Güncel piyasa verileri
+        </p>
+
       </div>
 
     </div>
@@ -97,6 +341,7 @@
         <div class="stock-header">
 
           <div>
+
             <div class="stock-symbol">
               {{ stock.symbol }}
             </div>
@@ -104,7 +349,9 @@
             <div class="stock-name">
               {{ stock.name }}
             </div>
+
           </div>
+
 
           <div
             class="stock-status"
@@ -129,6 +376,7 @@
           [class.negative]="!isPositive(stock.change)">
 
           {{ isPositive(stock.change) ? '+' : '' }}
+
           {{ stock.change | number:'1.2-2' }} ₺
 
           <span>
@@ -144,17 +392,28 @@
         <div class="stock-summary">
 
           <div>
-            <span>Günlük yüksek</span>
+
+            <span>
+              Günlük yüksek
+            </span>
+
             <strong>
               {{ stock.high | number:'1.2-2' }} ₺
             </strong>
+
           </div>
 
+
           <div>
-            <span>Günlük düşük</span>
+
+            <span>
+              Günlük düşük
+            </span>
+
             <strong>
               {{ stock.low | number:'1.2-2' }} ₺
             </strong>
+
           </div>
 
         </div>

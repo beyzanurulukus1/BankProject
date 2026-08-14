@@ -7,6 +7,12 @@ import {
   inject
 } from '@angular/core';
 
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material/dialog';
+
+import {
+  InvestmentService
+} from '../../../core/services/investment';
 import {
   MAT_DIALOG_DATA,
   MatDialogModule
@@ -20,7 +26,6 @@ import {
 
 import {
   HistoricalPrice,
-  InvestmentService,
   Stock
 } from '../../../core/services/investment';
 
@@ -28,6 +33,7 @@ import {
   selector: 'app-stock-detail-dialog',
   standalone: true,
   imports: [
+    ReactiveFormsModule,
     CommonModule,
     MatDialogModule
   ],
@@ -35,8 +41,21 @@ import {
   styleUrl: './stock-detail-dialog.css'
 })
 export class StockDetailDialog implements OnInit {
+    private investmentService = inject(InvestmentService);
+private formBuilder = inject(FormBuilder);
 
-  private investmentService = inject(InvestmentService);
+submitting = false;
+errorMessage = '';
+
+buyForm = this.formBuilder.group({
+  quantity: [
+    1,
+    [
+      Validators.required,
+      Validators.min(1)
+    ]
+  ]
+});
   private cdr = inject(ChangeDetectorRef);
 
   chart: Chart | null = null;
@@ -45,12 +64,14 @@ export class StockDetailDialog implements OnInit {
 
   history: HistoricalPrice[] = [];
 
-  constructor(
-    @Inject(MAT_DIALOG_DATA)
-    public stock: Stock
-  ) {
-    Chart.register(...registerables);
-  }
+ constructor(
+  @Inject(MAT_DIALOG_DATA)
+  public stock: Stock,
+
+  private dialogRef: MatDialogRef<StockDetailDialog>
+) {
+  Chart.register(...registerables);
+}
 
   ngOnInit(): void {
     this.loadHistory();
@@ -94,7 +115,71 @@ export class StockDetailDialog implements OnInit {
 
       });
   }
+get quantity(): number {
+  return Number(
+    this.buyForm.get('quantity')?.value ?? 0
+  );
+}
 
+get estimatedTotal(): number {
+  return this.quantity * this.stock.price;
+}
+
+get canBuy(): boolean {
+  return (
+    this.buyForm.valid &&
+    this.quantity > 0 &&
+    !this.submitting
+  );
+}
+buy(): void {
+
+  if (!this.canBuy) {
+    this.buyForm.markAllAsTouched();
+    return;
+  }
+
+  this.submitting = true;
+  this.errorMessage = '';
+
+  this.investmentService
+    .buyStock({
+      symbol: this.stock.symbol,
+      quantity: this.quantity
+    })
+    .subscribe({
+
+      next: (response) => {
+
+        console.log(
+          '✅ HİSSE SATIN ALINDI:',
+          response
+        );
+
+        this.dialogRef.close({
+          type: 'BUY',
+          result: response.data
+        });
+
+      },
+
+      error: (err) => {
+
+        console.error(
+          '❌ Hisse satın alınamadı:',
+          err
+        );
+
+        this.submitting = false;
+
+        this.errorMessage =
+          err?.error?.message ??
+          'Hisse satın alma işlemi gerçekleştirilemedi.';
+
+      }
+
+    });
+}
   changePeriod(period: string): void {
 
     this.selectedPeriod = period;

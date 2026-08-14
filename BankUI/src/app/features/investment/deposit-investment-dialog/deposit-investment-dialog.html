@@ -1,0 +1,216 @@
+<div class="dialog">
+
+  <div class="dialog-header">
+
+    <div>
+      <h2>Yatırım Hesabına Para Aktar</h2>
+
+      <p>
+        Banka hesabınızdan yatırım hesabınıza para aktarın.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="close-button"
+      (click)="cancel()">
+
+      ×
+
+    </button>
+
+  </div>
+
+
+  <div
+    *ngIf="loading"
+    class="loading">
+
+    Hesaplarınız yükleniyor...
+
+  </div>
+
+
+  <div
+    *ngIf="!loading && errorMessage"
+    class="error-message">
+
+    {{ errorMessage }}
+
+  </div>
+
+
+  <form
+    *ngIf="!loading"
+    [formGroup]="form"
+    (ngSubmit)="submit()">
+
+
+    <!-- Kaynak hesap -->
+
+    <div class="form-group">
+
+      <label>
+        Kaynak Hesap
+      </label>
+
+      <select
+        formControlName="sourceAccountId">
+
+        <option [ngValue]="null">
+          Hesap seçin
+        </option>
+
+        <option
+          *ngFor="let account of accounts"
+          [ngValue]="account.accountId">
+
+          {{ account.nickname || 'Banka Hesabı' }}
+          -
+          {{ account.balance | number:'1.2-2' }} ₺
+
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- Seçilen hesap -->
+
+    <div
+      *ngIf="selectedAccount"
+      class="account-summary">
+
+      <div>
+
+        <span>
+          Hesap
+        </span>
+
+        <strong>
+          {{ selectedAccount.nickname || 'Banka Hesabı' }}
+        </strong>
+
+      </div>
+
+      <div>
+
+        <span>
+          Bakiye
+        </span>
+
+        <strong>
+          {{ selectedAccount.balance | number:'1.2-2' }} ₺
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- Tutar -->
+
+    <div class="form-group">
+
+      <label>
+        Aktarılacak Tutar
+      </label>
+
+      <div class="amount-input">
+
+        <input
+          type="number"
+          formControlName="amount"
+          min="0.01"
+          step="0.01"
+          placeholder="0,00" />
+
+        <span>₺</span>
+
+      </div>
+
+      <small
+        *ngIf="
+          form.get('amount')?.touched &&
+          form.get('amount')?.hasError('min')
+        "
+        class="field-error">
+
+        Tutar 0'dan büyük olmalıdır.
+
+      </small>
+
+      <small
+        *ngIf="
+          selectedAccount &&
+          amount > selectedAccount.balance
+        "
+        class="field-error">
+
+        Kaynak hesapta yeterli bakiye bulunmuyor.
+
+      </small>
+
+    </div>
+
+
+    <!-- Sonuç -->
+
+    <div class="result-card">
+
+      <div>
+
+        <span>
+          Mevcut yatırım bakiyesi
+        </span>
+
+        <strong>
+          {{ investmentAccount.cashBalance | number:'1.2-2' }} ₺
+        </strong>
+
+      </div>
+
+      <div>
+
+        <span>
+          İşlem sonrası bakiye
+        </span>
+
+        <strong class="result-balance">
+          {{ resultingBalance | number:'1.2-2' }} ₺
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <!-- Butonlar -->
+
+    <div class="actions">
+
+      <button
+        type="button"
+        class="cancel-button"
+        (click)="cancel()"
+        [disabled]="submitting">
+
+        Vazgeç
+
+      </button>
+
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="!canTransfer() || submitting">
+
+        {{ submitting ? 'Aktarılıyor...' : 'Aktar' }}
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>

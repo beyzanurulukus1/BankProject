@@ -158,8 +158,8 @@ namespace BankApi.Services
     int userId,
     int sourceAccountId,
     decimal amount)
-{
-    const string sql = @"
+        {
+            const string sql = @"
         SELECT
             investment_account_id,
             source_account_id,
@@ -173,58 +173,241 @@ namespace BankApi.Services
         );
     ";
 
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            using var cmd = new NpgsqlCommand(sql, conn);
+
+            cmd.Parameters.AddWithValue("user_id", userId);
+            cmd.Parameters.AddWithValue("source_account_id", sourceAccountId);
+            cmd.Parameters.AddWithValue("amount", amount);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new InvestmentAccountDto
+            {
+                Id = reader.GetInt32(0),
+                UserId = userId,
+                CashBalance = reader.GetDecimal(3)
+            };
+        }
+
+        public class MarketResponse<T>
+        {
+            public bool IsSuccess { get; set; }
+
+            public T? Data { get; set; }
+
+            public string? Message { get; set; }
+        }
+
+        public class HistoricalResponse
+        {
+            public List<HistoricalQuoteDto> Quotes { get; set; } = new();
+        }
+
+        public class HistoricalQuoteDto
+        {
+            public DateTime Date { get; set; }
+
+            public decimal? Open { get; set; }
+
+            public decimal? High { get; set; }
+
+            public decimal? Low { get; set; }
+
+            public decimal? Close { get; set; }
+
+            public long? Volume { get; set; }
+        }
+        public async Task<InvestmentBuyResultDto?> BuyStockAsync(
+        int userId,
+        string symbol,
+        decimal quantity)
+        {
+            if (quantity <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Hisse adedi sıfırdan büyük olmalıdır.");
+            }
+
+            // 1. Güncel fiyatı market servisinden al
+            var stock = await GetStockAsync(symbol);
+
+            if (stock == null || stock.Price <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Hissenin güncel fiyatı alınamadı.");
+            }
+
+            // 2. Güncel fiyatla PostgreSQL function'ını çağır
+            const string sql = @"
+        SELECT
+            investment_account_id,
+            symbol,
+            bought_quantity,
+            price,
+            total_amount,
+            new_cash_balance,
+            portfolio_quantity,
+            average_cost,
+            message
+        FROM fn_buy_stock(
+            @user_id,
+            @symbol,
+            @quantity,
+            @price
+        );
+    ";
+
+            using var conn =
+                new NpgsqlConnection(_connectionString);
+
+            await conn.OpenAsync();
+
+            using var cmd =
+                new NpgsqlCommand(sql, conn);
+
+            cmd.Parameters.AddWithValue("user_id", userId);
+            cmd.Parameters.AddWithValue("symbol", symbol.ToUpper());
+            cmd.Parameters.AddWithValue("quantity", quantity);
+            cmd.Parameters.AddWithValue("price", stock.Price);
+
+            using var reader =
+                await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new InvestmentBuyResultDto
+            {
+                InvestmentAccountId = reader.GetInt32(0),
+                Symbol = reader.GetString(1),
+                BoughtQuantity = reader.GetDecimal(2),
+                Price = reader.GetDecimal(3),
+                TotalAmount = reader.GetDecimal(4),
+                NewCashBalance = reader.GetDecimal(5),
+                PortfolioQuantity = reader.GetDecimal(6),
+                AverageCost = reader.GetDecimal(7),
+                Message = reader.GetString(8)
+            };
+        }
+        public async Task<PortfolioDto?> GetPortfolioAsync(int userId)
+{
+    const string sql = @"
+        SELECT
+            ia.id,
+            ia.cash_balance,
+            pp.symbol,
+            pp.quantity,
+            pp.average_cost
+        FROM investment_accounts AS ia
+        LEFT JOIN portfolio_positions AS pp
+            ON pp.investment_account_id = ia.id
+        WHERE ia.user_id = @user_id
+        ORDER BY pp.symbol;
+    ";
+
     using var conn = new NpgsqlConnection(_connectionString);
     await conn.OpenAsync();
 
     using var cmd = new NpgsqlCommand(sql, conn);
 
     cmd.Parameters.AddWithValue("user_id", userId);
-    cmd.Parameters.AddWithValue("source_account_id", sourceAccountId);
-    cmd.Parameters.AddWithValue("amount", amount);
 
     using var reader = await cmd.ExecuteReaderAsync();
 
-    if (!await reader.ReadAsync())
+    PortfolioDto? portfolio = null;
+
+    while (await reader.ReadAsync())
+    {
+        if (portfolio == null)
+        {
+            portfolio = new PortfolioDto
+            {
+                InvestmentAccountId = reader.GetInt32(0),
+                CashBalance = reader.GetDecimal(1)
+            };
+        }
+
+        if (reader.IsDBNull(2))
+        {
+            continue;
+        }
+
+        portfolio.Positions.Add(
+            new PortfolioPositionDto
+            {
+                Symbol = reader.GetString(2),
+                Quantity = reader.GetDecimal(3),
+                AverageCost = reader.GetDecimal(4)
+            }
+        );
+    }
+
+    if (portfolio == null)
     {
         return null;
     }
 
-    return new InvestmentAccountDto
+    foreach (var position in portfolio.Positions)
     {
-        Id = reader.GetInt32(0),
-        UserId = userId,
-        CashBalance = reader.GetDecimal(3)
-    };
+        var stock = await GetStockAsync(position.Symbol);
+
+        if (stock == null || stock.Price <= 0)
+        {
+            continue;
+        }
+
+        position.CurrentPrice = stock.Price;
+
+        position.TotalCost =
+            position.Quantity *
+            position.AverageCost;
+
+        position.CurrentValue =
+            position.Quantity *
+            position.CurrentPrice;
+
+        position.ProfitLoss =
+            position.CurrentValue -
+            position.TotalCost;
+
+        position.ProfitLossPercent =
+            position.TotalCost == 0
+                ? 0
+                : (
+                    position.ProfitLoss /
+                    position.TotalCost
+                  ) * 100;
+
+        portfolio.TotalCost +=
+            position.TotalCost;
+
+        portfolio.TotalValue +=
+            position.CurrentValue;
+    }
+
+    portfolio.TotalProfitLoss =
+        portfolio.TotalValue -
+        portfolio.TotalCost;
+
+    portfolio.TotalProfitLossPercent =
+        portfolio.TotalCost == 0
+            ? 0
+            : (
+                portfolio.TotalProfitLoss /
+                portfolio.TotalCost
+              ) * 100;
+
+    return portfolio;
 }
-
-    }
-
-    public class MarketResponse<T>
-    {
-        public bool IsSuccess { get; set; }
-
-        public T? Data { get; set; }
-
-        public string? Message { get; set; }
-    }
-
-    public class HistoricalResponse
-    {
-        public List<HistoricalQuoteDto> Quotes { get; set; } = new();
-    }
-
-    public class HistoricalQuoteDto
-    {
-        public DateTime Date { get; set; }
-
-        public decimal? Open { get; set; }
-
-        public decimal? High { get; set; }
-
-        public decimal? Low { get; set; }
-
-        public decimal? Close { get; set; }
-
-        public long? Volume { get; set; }
     }
 }

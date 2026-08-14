@@ -221,5 +221,128 @@ namespace BankApi.Controllers
                 });
             }
         }
+        [HttpPost("buy")]
+public async Task<IActionResult> BuyStock(
+    [FromBody] BuyStockRequest request)
+{
+    try
+    {
+        if (string.IsNullOrWhiteSpace(request.Symbol))
+        {
+            return BadRequest(new
+            {
+                isSuccess = false,
+                message = "Hisse sembolü gereklidir."
+            });
+        }
+
+        if (request.Quantity <= 0)
+        {
+            return BadRequest(new
+            {
+                isSuccess = false,
+                message = "Hisse adedi sıfırdan büyük olmalıdır."
+            });
+        }
+
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                isSuccess = false,
+                message = "Kullanıcı kimliği alınamadı."
+            });
+        }
+
+        var result =
+            await _investmentService.BuyStockAsync(
+                userId,
+                request.Symbol,
+                request.Quantity);
+
+        if (result == null)
+        {
+            return BadRequest(new
+            {
+                isSuccess = false,
+                message = "Hisse satın alma işlemi gerçekleştirilemedi."
+            });
+        }
+
+        return Ok(new
+        {
+            isSuccess = true,
+            data = result,
+            message = result.Message
+        });
+    }
+    catch (PostgresException ex)
+    {
+        return BadRequest(new
+        {
+            isSuccess = false,
+            message = ex.MessageText
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new
+        {
+            isSuccess = false,
+            message = "Hisse satın alma sırasında hata oluştu.",
+            error = ex.Message
+        });
+    }
+}
+[HttpGet("portfolio")]
+public async Task<IActionResult> GetPortfolio()
+{
+    try
+    {
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                isSuccess = false,
+                message = "Kullanıcı kimliği alınamadı."
+            });
+        }
+
+        var portfolio =
+            await _investmentService.GetPortfolioAsync(userId);
+
+        if (portfolio == null)
+        {
+            return NotFound(new
+            {
+                isSuccess = false,
+                message = "Yatırım hesabı bulunamadı."
+            });
+        }
+
+        return Ok(new
+        {
+            isSuccess = true,
+            data = portfolio
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new
+        {
+            isSuccess = false,
+            message = "Portföy bilgileri alınamadı.",
+            error = ex.Message
+        });
+    }
+}
     }
 }

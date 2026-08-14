@@ -1,0 +1,205 @@
+.dialog {
+  padding: 26px;
+  min-width: 430px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.dialog-header p {
+  margin: 7px 0 0;
+  color: #888;
+  font-size: 13px;
+}
+
+.close-button {
+  border: none;
+  background: transparent;
+
+  font-size: 24px;
+
+  cursor: pointer;
+
+  color: #777;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+select,
+.amount-input input {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  padding: 12px;
+
+  font-size: 14px;
+
+  outline: none;
+}
+
+select:focus,
+.amount-input input:focus {
+  border-color: #d5a800;
+}
+
+.amount-input {
+  position: relative;
+}
+
+.amount-input input {
+  padding-right: 42px;
+}
+
+.amount-input span {
+  position: absolute;
+
+  right: 14px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #888;
+  font-weight: 600;
+}
+
+.account-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.account-summary div {
+  background: #f7f8fa;
+
+  border-radius: 12px;
+
+  padding: 14px;
+}
+
+.account-summary span,
+.result-card span {
+  display: block;
+
+  color: #888;
+
+  font-size: 12px;
+
+  margin-bottom: 5px;
+}
+
+.account-summary strong,
+.result-card strong {
+  font-size: 14px;
+}
+
+.result-card {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 14px;
+
+  padding: 16px;
+
+  background: #f7f8fa;
+
+  border-radius: 14px;
+
+  margin-top: 8px;
+}
+
+.result-balance {
+  color: #1d7a46;
+}
+
+.field-error,
+.error-message {
+  color: #c62828;
+
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+.cancel-button,
+.submit-button {
+  border: none;
+
+  border-radius: 9px;
+
+  padding: 11px 18px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+.cancel-button {
+  background: #f1f3f5;
+  color: #444;
+}
+
+.submit-button {
+  background: #222;
+  color: white;
+}
+
+.submit-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading {
+  padding: 30px 0;
+
+  text-align: center;
+
+  color: #777;
+}
+
+@media (max-width: 600px) {
+
+  .dialog {
+    min-width: unset;
+    padding: 20px;
+  }
+
+}
