@@ -300,8 +300,8 @@ namespace BankApi.Services
             };
         }
         public async Task<PortfolioDto?> GetPortfolioAsync(int userId)
-{
-    const string sql = @"
+        {
+            const string sql = @"
         SELECT
             ia.id,
             ia.cash_balance,
@@ -315,99 +315,252 @@ namespace BankApi.Services
         ORDER BY pp.symbol;
     ";
 
-    using var conn = new NpgsqlConnection(_connectionString);
-    await conn.OpenAsync();
+            using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
 
-    using var cmd = new NpgsqlCommand(sql, conn);
+            using var cmd = new NpgsqlCommand(sql, conn);
 
-    cmd.Parameters.AddWithValue("user_id", userId);
+            cmd.Parameters.AddWithValue("user_id", userId);
 
-    using var reader = await cmd.ExecuteReaderAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
 
-    PortfolioDto? portfolio = null;
+            PortfolioDto? portfolio = null;
 
-    while (await reader.ReadAsync())
-    {
-        if (portfolio == null)
+            while (await reader.ReadAsync())
+            {
+                if (portfolio == null)
+                {
+                    portfolio = new PortfolioDto
+                    {
+                        InvestmentAccountId = reader.GetInt32(0),
+                        CashBalance = reader.GetDecimal(1)
+                    };
+                }
+
+                if (reader.IsDBNull(2))
+                {
+                    continue;
+                }
+
+                portfolio.Positions.Add(
+                    new PortfolioPositionDto
+                    {
+                        Symbol = reader.GetString(2),
+                        Quantity = reader.GetDecimal(3),
+                        AverageCost = reader.GetDecimal(4)
+                    }
+                );
+            }
+
+            if (portfolio == null)
+            {
+                return null;
+            }
+
+            foreach (var position in portfolio.Positions)
+            {
+                var stock = await GetStockAsync(position.Symbol);
+
+                if (stock == null || stock.Price <= 0)
+                {
+                    continue;
+                }
+
+                position.CurrentPrice = stock.Price;
+
+                position.TotalCost =
+                    position.Quantity *
+                    position.AverageCost;
+
+                position.CurrentValue =
+                    position.Quantity *
+                    position.CurrentPrice;
+
+                position.ProfitLoss =
+                    position.CurrentValue -
+                    position.TotalCost;
+
+                position.ProfitLossPercent =
+                    position.TotalCost == 0
+                        ? 0
+                        : (
+                            position.ProfitLoss /
+                            position.TotalCost
+                          ) * 100;
+
+                portfolio.TotalCost +=
+                    position.TotalCost;
+
+                portfolio.TotalValue +=
+                    position.CurrentValue;
+            }
+
+            portfolio.TotalProfitLoss =
+                portfolio.TotalValue -
+                portfolio.TotalCost;
+
+            portfolio.TotalProfitLossPercent =
+                portfolio.TotalCost == 0
+                    ? 0
+                    : (
+                        portfolio.TotalProfitLoss /
+                        portfolio.TotalCost
+                      ) * 100;
+
+            return portfolio;
+        }
+        public async Task<InvestmentTransactionSummaryDto?>
+            GetInvestmentTransactionsAsync(int userId)
         {
-            portfolio = new PortfolioDto
+            const string sql = @"
+        SELECT
+            it.id,
+            it.symbol,
+            it.transaction_type,
+            it.quantity,
+            it.price,
+            it.total_amount,
+            it.realized_profit_loss,
+            it.created_at
+        FROM investment_transactions AS it
+        INNER JOIN investment_accounts AS ia
+            ON ia.id = it.investment_account_id
+        WHERE ia.user_id = @user_id
+        ORDER BY it.created_at DESC;
+    ";
+
+            using var conn =
+                new NpgsqlConnection(_connectionString);
+
+            await conn.OpenAsync();
+
+            using var cmd =
+                new NpgsqlCommand(sql, conn);
+
+            cmd.Parameters.AddWithValue(
+                "user_id",
+                userId);
+
+            using var reader =
+                await cmd.ExecuteReaderAsync();
+
+            var result =
+                new InvestmentTransactionSummaryDto();
+
+            while (await reader.ReadAsync())
+            {
+                var transaction =
+                    new InvestmentTransactionDto
+                    {
+                        Id = reader.GetInt32(0),
+
+                        Symbol = reader.GetString(1),
+
+                        TransactionType = reader.GetString(2),
+
+                        Quantity = reader.GetDecimal(3),
+
+                        Price = reader.GetDecimal(4),
+
+                        TotalAmount = reader.GetDecimal(5),
+
+                        RealizedProfitLoss =
+                            reader.IsDBNull(6)
+                                ? null
+                                : reader.GetDecimal(6),
+
+                        CreatedAt =
+                            reader.GetDateTime(7)
+                    };
+
+                result.Transactions.Add(
+                    transaction);
+
+                if (
+                    transaction.TransactionType == "SELL" &&
+                    transaction.RealizedProfitLoss.HasValue
+                )
+                {
+                    result.TotalRealizedProfitLoss +=
+                        transaction.RealizedProfitLoss.Value;
+                }
+            }
+
+            return result;
+        }
+        public async Task<InvestmentSellResultDto?> SellStockAsync(
+            int userId,
+            string symbol,
+            decimal quantity)
+        {
+            if (quantity <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Satılacak hisse adedi sıfırdan büyük olmalıdır.");
+            }
+
+            var stock = await GetStockAsync(symbol);
+
+            if (stock == null || stock.Price <= 0)
+            {
+                throw new InvalidOperationException(
+                    "Hissenin güncel fiyatı alınamadı.");
+            }
+
+            const string sql = @"
+        SELECT
+            investment_account_id,
+            symbol,
+            sold_quantity,
+            price,
+            total_amount,
+            realized_profit_loss,
+            new_cash_balance,
+            remaining_quantity,
+            average_cost,
+            message
+        FROM fn_sell_stock(
+            @user_id,
+            @symbol,
+            @quantity,
+            @price
+        );
+    ";
+
+            using var conn =
+                new NpgsqlConnection(_connectionString);
+
+            await conn.OpenAsync();
+
+            using var cmd =
+                new NpgsqlCommand(sql, conn);
+
+            cmd.Parameters.AddWithValue("user_id", userId);
+            cmd.Parameters.AddWithValue("symbol", symbol.ToUpper());
+            cmd.Parameters.AddWithValue("quantity", quantity);
+            cmd.Parameters.AddWithValue("price", stock.Price);
+
+            using var reader =
+                await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new InvestmentSellResultDto
             {
                 InvestmentAccountId = reader.GetInt32(0),
-                CashBalance = reader.GetDecimal(1)
+                Symbol = reader.GetString(1),
+                SoldQuantity = reader.GetDecimal(2),
+                Price = reader.GetDecimal(3),
+                TotalAmount = reader.GetDecimal(4),
+                RealizedProfitLoss = reader.GetDecimal(5),
+                NewCashBalance = reader.GetDecimal(6),
+                RemainingQuantity = reader.GetDecimal(7),
+                AverageCost = reader.GetDecimal(8),
+                Message = reader.GetString(9)
             };
         }
-
-        if (reader.IsDBNull(2))
-        {
-            continue;
-        }
-
-        portfolio.Positions.Add(
-            new PortfolioPositionDto
-            {
-                Symbol = reader.GetString(2),
-                Quantity = reader.GetDecimal(3),
-                AverageCost = reader.GetDecimal(4)
-            }
-        );
-    }
-
-    if (portfolio == null)
-    {
-        return null;
-    }
-
-    foreach (var position in portfolio.Positions)
-    {
-        var stock = await GetStockAsync(position.Symbol);
-
-        if (stock == null || stock.Price <= 0)
-        {
-            continue;
-        }
-
-        position.CurrentPrice = stock.Price;
-
-        position.TotalCost =
-            position.Quantity *
-            position.AverageCost;
-
-        position.CurrentValue =
-            position.Quantity *
-            position.CurrentPrice;
-
-        position.ProfitLoss =
-            position.CurrentValue -
-            position.TotalCost;
-
-        position.ProfitLossPercent =
-            position.TotalCost == 0
-                ? 0
-                : (
-                    position.ProfitLoss /
-                    position.TotalCost
-                  ) * 100;
-
-        portfolio.TotalCost +=
-            position.TotalCost;
-
-        portfolio.TotalValue +=
-            position.CurrentValue;
-    }
-
-    portfolio.TotalProfitLoss =
-        portfolio.TotalValue -
-        portfolio.TotalCost;
-
-    portfolio.TotalProfitLossPercent =
-        portfolio.TotalCost == 0
-            ? 0
-            : (
-                portfolio.TotalProfitLoss /
-                portfolio.TotalCost
-              ) * 100;
-
-    return portfolio;
-}
     }
 }

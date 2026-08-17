@@ -1,7 +1,9 @@
-
 @BankApi_HostAddress = http://localhost:5240
 
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJiZXl6YUBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDdXN0b21lciIsImV4cCI6MTc4NjcwODM2NSwiaXNzIjoiQmFua0FwaSIsImF1ZCI6IkJhbmtVSSJ9.w6eljKLivkK078wzZlcgJzE3oK28fTH4oihbNi_cFkU
+@token = YOUR_TOKEN_HERE
+
+
+### Kullanıcı Kayıt Testi
 
 POST {{BankApi_HostAddress}}/api/Auth/register
 Content-Type: application/json
@@ -15,7 +17,10 @@ Content-Type: application/json
   "phoneNumber": "05551112233",
   "dateOfBirth": "2006-12-13T00:00:00.000Z"
 }
-### Kullanıcı Giriş Testi (Başarılı Senaryo)
+
+
+### Kullanıcı Giriş Testi
+
 POST {{BankApi_HostAddress}}/api/Auth/login
 Content-Type: application/json
 
@@ -23,34 +28,41 @@ Content-Type: application/json
   "email": "beyza@gmail.com",
   "password": "1111"
 }
-### 1. Token OLMADAN Korumalı Kapıyı Çalma (401 Red Almalıyız)
-GET http://localhost:5240/api/Test/protected
 
-###
 
-### 2. Token İLE Korumalı Kapıyı Çalma (200 OK Almalıyız)
-# NOT: Buradaki {{YOUR_TOKEN}} yerine Login olduğunda sana dönen o uzun eyJ... metnini yapıştır!
-GET http://localhost:5240/api/Test/protected
+### Token OLMADAN Korumalı Endpoint
+
+GET {{BankApi_HostAddress}}/api/Test/protected
+
+
+### Token İLE Korumalı Endpoint
+
+GET {{BankApi_HostAddress}}/api/Test/protected
 Authorization: Bearer {{token}}
 
-### 3. Yeni Banka Hesabı Açma (TL Hesabı -> CurrencyId: 1)
-POST http://localhost:5240/api/Account/create
+
+### Yeni Banka Hesabı Açma
+
+POST {{BankApi_HostAddress}}/api/Account/create
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
   "currencyId": 2
 }
+
+
 ### Kullanıcının Hesaplarını Listele
-GET http://localhost:5240/api/account/my-accounts
+
+GET {{BankApi_HostAddress}}/api/Account/my-accounts
 Authorization: Bearer {{token}}
+
 
 ### Para Transferi
 
-POST http://localhost:5240/api/transaction/transfer
-Authorization: Bearer {{token}}
-
+POST {{BankApi_HostAddress}}/api/Transaction/transfer
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "sourceAccountId": 1,
@@ -59,16 +71,16 @@ Content-Type: application/json
   "description": "test transferi"
 }
 
-### 4. İşlem Geçmişi (Ekstre / History)
-GET http://localhost:5240/api/Transaction/history
+
+### İşlem Geçmişi
+
+GET {{BankApi_HostAddress}}/api/Transaction/history
 Authorization: Bearer {{token}}
 
-{
-  "userId": 1
-}
 
 ### Para Yatırma
-POST http://localhost:5240/api/Transaction/deposit
+
+POST {{BankApi_HostAddress}}/api/Transaction/deposit
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -78,10 +90,12 @@ Authorization: Bearer {{token}}
   "description": "ATM Para Yatırma Testi"
 }
 
+
 ### Para Çekme
-POST http://localhost:5240/api/Transaction/withdraw
+
+POST {{BankApi_HostAddress}}/api/Transaction/withdraw
 Content-Type: application/json
-Authorization: Bearer  {{token}}
+Authorization: Bearer {{token}}
 
 {
   "accountId": 1,
@@ -89,29 +103,34 @@ Authorization: Bearer  {{token}}
   "description": "ATM Para Çekme Testi"
 }
 
+
 ### THYAO TEST
 
-GET http://localhost:5240/api/Investment/stock/THYAO
+GET {{BankApi_HostAddress}}/api/Investment/stock/THYAO
 Authorization: Bearer {{token}}
 
 
 ### BIST 100 TEST
 
-GET http://localhost:5240/api/Investment/index/XU100
+GET {{BankApi_HostAddress}}/api/Investment/index/XU100
 Authorization: Bearer {{token}}
+
+
 ### THYAO HISTORY
 
-GET http://localhost:5240/api/Investment/history/THYAO?period=1mo&interval=1d
+GET {{BankApi_HostAddress}}/api/Investment/history/THYAO?period=1mo&interval=1d
 Authorization: Bearer {{token}}
+
 
 ### Investment Account
 
-GET http://localhost:5240/api/Investment/account
+GET {{BankApi_HostAddress}}/api/Investment/account
 Authorization: Bearer {{token}}
 
-### Yatırım hesabına para aktar
 
-POST http://localhost:5240/api/Investment/deposit
+### Yatırım Hesabına Para Aktar
+
+POST {{BankApi_HostAddress}}/api/Investment/deposit
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -119,9 +138,11 @@ Authorization: Bearer {{token}}
   "sourceAccountId": 2,
   "amount": 1000
 }
+
+
 ### BUY THYAO
 
-POST http://localhost:5240/api/Investment/buy
+POST {{BankApi_HostAddress}}/api/Investment/buy
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -130,7 +151,26 @@ Authorization: Bearer {{token}}
   "quantity": 1
 }
 
+
 ### Portfolio
 
-GET http://localhost:5240/api/Investment/portfolio
+GET {{BankApi_HostAddress}}/api/Investment/portfolio
+Authorization: Bearer {{token}}
+
+
+### SELL GARAN
+
+POST {{BankApi_HostAddress}}/api/Investment/sell
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symbol": "GARAN",
+  "quantity": 1
+}
+
+
+### Investment Transactions
+
+GET {{BankApi_HostAddress}}/api/Investment/transactions
 Authorization: Bearer {{token}}

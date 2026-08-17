@@ -1048,6 +1048,7 @@ CREATE TABLE investment_transactions (
     price NUMERIC(18,4) NOT NULL,
 
     total_amount NUMERIC(18,2) NOT NULL,
+    realized_profit_loss NUMERIC(18,2),
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -1353,6 +1354,158 @@ BEGIN
         v_new_quantity,
         v_new_average_cost,
         'Hisse satın alma işlemi başarılı.'::VARCHAR;
+
+END;
+$$;
+CREATE OR REPLACE FUNCTION fn_sell_stock(
+    p_user_id INTEGER,
+    p_symbol VARCHAR,
+    p_quantity NUMERIC,
+    p_price NUMERIC
+)
+RETURNS TABLE (
+    investment_account_id INTEGER,
+    symbol VARCHAR,
+    sold_quantity NUMERIC,
+    price NUMERIC,
+    total_amount NUMERIC,
+    realized_profit_loss NUMERIC,
+    new_cash_balance NUMERIC,
+    remaining_quantity NUMERIC,
+    average_cost NUMERIC,
+    message VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_account_id INTEGER;
+    v_cash_balance NUMERIC;
+
+    v_existing_quantity NUMERIC;
+    v_average_cost NUMERIC;
+
+    v_total_amount NUMERIC;
+    v_realized_profit_loss NUMERIC;
+
+    v_remaining_quantity NUMERIC;
+BEGIN
+
+    IF p_quantity <= 0 THEN
+        RAISE EXCEPTION
+            'Satılacak hisse adedi sıfırdan büyük olmalıdır.';
+    END IF;
+
+    IF p_price <= 0 THEN
+        RAISE EXCEPTION
+            'Hisse fiyatı sıfırdan büyük olmalıdır.';
+    END IF;
+
+    SELECT
+        ia.id,
+        ia.cash_balance
+    INTO
+        v_account_id,
+        v_cash_balance
+    FROM investment_accounts AS ia
+    WHERE ia.user_id = p_user_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            'Yatırım hesabı bulunamadı.';
+    END IF;
+
+    SELECT
+        pp.quantity,
+        pp.average_cost
+    INTO
+        v_existing_quantity,
+        v_average_cost
+    FROM portfolio_positions AS pp
+    WHERE pp.investment_account_id = v_account_id
+      AND pp.symbol = p_symbol
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION
+            'Satılacak hisse portföyde bulunamadı.';
+    END IF;
+
+    IF v_existing_quantity < p_quantity THEN
+        RAISE EXCEPTION
+            'Satılacak yeterli hisse adedi bulunmuyor.';
+    END IF;
+
+    v_total_amount :=
+        p_quantity * p_price;
+
+    v_realized_profit_loss :=
+        (p_price - v_average_cost)
+        * p_quantity;
+
+    v_remaining_quantity :=
+        v_existing_quantity - p_quantity;
+
+    UPDATE investment_accounts AS ia
+    SET cash_balance =
+        cash_balance + v_total_amount
+    WHERE ia.id = v_account_id;
+
+    IF v_remaining_quantity = 0 THEN
+
+        DELETE FROM portfolio_positions AS pp
+        WHERE pp.investment_account_id = v_account_id
+          AND pp.symbol = p_symbol;
+
+    ELSE
+
+        UPDATE portfolio_positions AS pp
+        SET
+            quantity = v_remaining_quantity,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE pp.investment_account_id = v_account_id
+          AND pp.symbol = p_symbol;
+
+    END IF;
+
+    INSERT INTO investment_transactions (
+        investment_account_id,
+        symbol,
+        transaction_type,
+        quantity,
+        price,
+        total_amount,
+        realized_profit_loss
+    )
+    VALUES (
+        v_account_id,
+        p_symbol,
+        'SELL',
+        p_quantity,
+        p_price,
+        v_total_amount,
+        v_realized_profit_loss
+    );
+
+    SELECT
+        ia.cash_balance
+    INTO
+        v_cash_balance
+    FROM investment_accounts AS ia
+    WHERE ia.id = v_account_id;
+
+    RETURN QUERY
+    SELECT
+        v_account_id,
+        p_symbol,
+        p_quantity,
+        p_price,
+        v_total_amount,
+        v_realized_profit_loss,
+        v_cash_balance,
+        v_remaining_quantity,
+        v_average_cost,
+        'Hisse satış işlemi başarılı.'::VARCHAR;
 
 END;
 $$;

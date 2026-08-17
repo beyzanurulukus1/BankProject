@@ -1,21 +1,23 @@
 import { CommonModule } from '@angular/common';
+
 import {
-  Component,
   ChangeDetectorRef,
+  Component,
   Inject,
   OnInit,
   inject
 } from '@angular/core';
 
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 
 import {
-  InvestmentService
-} from '../../../core/services/investment';
-import {
   MAT_DIALOG_DATA,
-  MatDialogModule
+  MatDialogModule,
+  MatDialogRef
 } from '@angular/material/dialog';
 
 import {
@@ -26,37 +28,68 @@ import {
 
 import {
   HistoricalPrice,
+  InvestmentService,
+  PortfolioPosition,
   Stock
 } from '../../../core/services/investment';
+
 
 @Component({
   selector: 'app-stock-detail-dialog',
   standalone: true,
   imports: [
-    ReactiveFormsModule,
     CommonModule,
+    ReactiveFormsModule,
     MatDialogModule
   ],
   templateUrl: './stock-detail-dialog.html',
   styleUrl: './stock-detail-dialog.css'
 })
 export class StockDetailDialog implements OnInit {
-    private investmentService = inject(InvestmentService);
-private formBuilder = inject(FormBuilder);
 
-submitting = false;
-errorMessage = '';
+  // =========================
+  // SERVICES
+  // =========================
 
-buyForm = this.formBuilder.group({
-  quantity: [
-    1,
-    [
-      Validators.required,
-      Validators.min(1)
-    ]
-  ]
-});
-  private cdr = inject(ChangeDetectorRef);
+  private investmentService =
+    inject(InvestmentService);
+
+  private formBuilder =
+    inject(FormBuilder);
+
+  private cdr =
+    inject(ChangeDetectorRef);
+
+
+  // =========================
+  // DIALOG
+  // =========================
+
+  constructor(
+    @Inject(MAT_DIALOG_DATA)
+    public stock: Stock,
+
+    private dialogRef:
+      MatDialogRef<StockDetailDialog>
+  ) {
+
+    Chart.register(...registerables);
+
+  }
+
+
+  // =========================
+  // UI STATE
+  // =========================
+
+  submitting = false;
+
+  errorMessage = '';
+
+
+  // =========================
+  // CHART
+  // =========================
 
   chart: Chart | null = null;
 
@@ -64,18 +97,62 @@ buyForm = this.formBuilder.group({
 
   history: HistoricalPrice[] = [];
 
- constructor(
-  @Inject(MAT_DIALOG_DATA)
-  public stock: Stock,
 
-  private dialogRef: MatDialogRef<StockDetailDialog>
-) {
-  Chart.register(...registerables);
-}
+  // =========================
+  // BUY
+  // =========================
+
+  buyForm =
+    this.formBuilder.group({
+
+      quantity: [
+        1,
+        [
+          Validators.required,
+          Validators.min(1)
+        ]
+      ]
+
+    });
+
+
+  // =========================
+  // SELL
+  // =========================
+
+  sellForm =
+    this.formBuilder.group({
+
+      quantity: [
+        1,
+        [
+          Validators.required,
+          Validators.min(1)
+        ]
+      ]
+
+    });
+
+  portfolioPosition:
+    PortfolioPosition | null = null;
+
+
+  // =========================
+  // LIFECYCLE
+  // =========================
 
   ngOnInit(): void {
+
     this.loadHistory();
+
+    this.loadPortfolioPosition();
+
   }
+
+
+  // =========================
+  // HISTORICAL DATA
+  // =========================
 
   loadHistory(): void {
 
@@ -94,12 +171,15 @@ buyForm = this.formBuilder.group({
             response
           );
 
-          this.history = response.data;
+          this.history =
+            response.data;
 
           this.cdr.detectChanges();
 
           setTimeout(() => {
+
             this.createChart();
+
           });
 
         },
@@ -114,83 +194,37 @@ buyForm = this.formBuilder.group({
         }
 
       });
-  }
-get quantity(): number {
-  return Number(
-    this.buyForm.get('quantity')?.value ?? 0
-  );
-}
 
-get estimatedTotal(): number {
-  return this.quantity * this.stock.price;
-}
-
-get canBuy(): boolean {
-  return (
-    this.buyForm.valid &&
-    this.quantity > 0 &&
-    !this.submitting
-  );
-}
-buy(): void {
-
-  if (!this.canBuy) {
-    this.buyForm.markAllAsTouched();
-    return;
   }
 
-  this.submitting = true;
-  this.errorMessage = '';
 
-  this.investmentService
-    .buyStock({
-      symbol: this.stock.symbol,
-      quantity: this.quantity
-    })
-    .subscribe({
+  // =========================
+  // CHANGE CHART PERIOD
+  // =========================
 
-      next: (response) => {
+  changePeriod(
+    period: string
+  ): void {
 
-        console.log(
-          '✅ HİSSE SATIN ALINDI:',
-          response
-        );
-
-        this.dialogRef.close({
-          type: 'BUY',
-          result: response.data
-        });
-
-      },
-
-      error: (err) => {
-
-        console.error(
-          '❌ Hisse satın alınamadı:',
-          err
-        );
-
-        this.submitting = false;
-
-        this.errorMessage =
-          err?.error?.message ??
-          'Hisse satın alma işlemi gerçekleştirilemedi.';
-
-      }
-
-    });
-}
-  changePeriod(period: string): void {
-
-    this.selectedPeriod = period;
+    this.selectedPeriod =
+      period;
 
     if (this.chart) {
+
       this.chart.destroy();
+
       this.chart = null;
+
     }
 
     this.loadHistory();
+
   }
+
+
+  // =========================
+  // CREATE CHART
+  // =========================
 
   createChart(): void {
 
@@ -199,25 +233,51 @@ buy(): void {
         'stockChart'
       ) as HTMLCanvasElement | null;
 
-    if (!canvas || this.history.length === 0) {
+
+    if (
+      !canvas ||
+      this.history.length === 0
+    ) {
+
       return;
+
     }
 
-    const labels = this.history.map(item =>
-      new Date(item.date).toLocaleDateString(
-        'tr-TR',
-        {
-          day: '2-digit',
-          month: '2-digit'
-        }
-      )
-    );
 
-    const prices = this.history.map(
-      item => item.close
-    );
+    // Önce eski chart varsa temizle
+    if (this.chart) {
 
-    const config: ChartConfiguration = {
+      this.chart.destroy();
+
+      this.chart = null;
+
+    }
+
+
+    const labels =
+      this.history.map(item =>
+
+        new Date(
+          item.date
+        ).toLocaleDateString(
+          'tr-TR',
+          {
+            day: '2-digit',
+            month: '2-digit'
+          }
+        )
+
+      );
+
+
+    const prices =
+      this.history.map(
+        item => item.close
+      );
+
+
+    const config:
+      ChartConfiguration = {
 
       type: 'line',
 
@@ -226,6 +286,7 @@ buy(): void {
         labels,
 
         datasets: [
+
           {
             data: prices,
 
@@ -233,9 +294,13 @@ buy(): void {
 
             tension: 0.35,
 
-            pointRadius: 0
+            pointRadius: 0,
+
+            fill: false
           }
+
         ]
+
       },
 
       options: {
@@ -276,16 +341,346 @@ buy(): void {
 
     };
 
-    this.chart = new Chart(
-      canvas,
-      config
-    );
-  }
-  isPositive(value: number): boolean {
-  return value >= 0;
-}
 
-formatPercent(value: number): string {
-  return `${(value * 100).toFixed(2)}%`;
-}
+    this.chart =
+      new Chart(
+        canvas,
+        config
+      );
+
+  }
+
+
+  // =========================
+  // BUY GETTERS
+  // =========================
+
+  get quantity(): number {
+
+    return Number(
+      this.buyForm
+        .get('quantity')
+        ?.value ?? 0
+    );
+
+  }
+
+
+  get estimatedTotal(): number {
+
+    return (
+      this.quantity *
+      this.stock.price
+    );
+
+  }
+
+
+  get canBuy(): boolean {
+
+    return (
+
+      this.buyForm.valid &&
+
+      this.quantity > 0 &&
+
+      !this.submitting
+
+    );
+
+  }
+
+
+  // =========================
+  // BUY
+  // =========================
+
+  buy(): void {
+
+    if (!this.canBuy) {
+
+      this.buyForm
+        .markAllAsTouched();
+
+      return;
+
+    }
+
+
+    this.submitting = true;
+
+    this.errorMessage = '';
+
+
+    this.investmentService
+      .buyStock({
+
+        symbol:
+          this.stock.symbol,
+
+        quantity:
+          this.quantity
+
+      })
+      .subscribe({
+
+        next: (response) => {
+
+          console.log(
+            '✅ HİSSE SATIN ALINDI:',
+            response
+          );
+
+
+          this.dialogRef.close({
+
+            type: 'BUY',
+
+            result:
+              response.data
+
+          });
+
+        },
+
+
+        error: (err) => {
+
+          console.error(
+            '❌ Hisse satın alınamadı:',
+            err
+          );
+
+
+          this.submitting = false;
+
+
+          this.errorMessage =
+            err?.error?.message ??
+            'Hisse satın alma işlemi gerçekleştirilemedi.';
+
+
+          this.cdr.detectChanges();
+
+        }
+
+      });
+
+  }
+
+
+  // =========================
+  // PORTFOLIO POSITION
+  // =========================
+
+  loadPortfolioPosition(): void {
+
+    this.investmentService
+      .getPortfolio()
+      .subscribe({
+
+        next: (response) => {
+
+          this.portfolioPosition =
+
+            response.data.positions.find(
+              position =>
+                position.symbol ===
+                this.stock.symbol
+            ) ?? null;
+
+
+          console.log(
+            '✅ POZİSYON:',
+            this.portfolioPosition
+          );
+
+
+          this.cdr.detectChanges();
+
+        },
+
+
+        error: (err) => {
+
+          console.error(
+            '❌ Portföy pozisyonu alınamadı:',
+            err
+          );
+
+        }
+
+      });
+
+  }
+
+
+  // =========================
+  // SELL GETTERS
+  // =========================
+
+  get sellQuantity(): number {
+
+    return Number(
+      this.sellForm
+        .get('quantity')
+        ?.value ?? 0
+    );
+
+  }
+
+
+  get estimatedSellTotal(): number {
+
+    return (
+      this.sellQuantity *
+      this.stock.price
+    );
+
+  }
+
+
+  get canSell(): boolean {
+
+    if (!this.portfolioPosition) {
+
+      return false;
+
+    }
+
+
+    return (
+
+      this.sellForm.valid &&
+
+      this.sellQuantity > 0 &&
+
+      this.sellQuantity <=
+        this.portfolioPosition.quantity &&
+
+      !this.submitting
+
+    );
+
+  }
+
+
+  // =========================
+  // SELL
+  // =========================
+
+  sell(): void {
+
+    if (!this.canSell) {
+
+      this.sellForm
+        .markAllAsTouched();
+
+      return;
+
+    }
+
+
+    this.submitting = true;
+
+    this.errorMessage = '';
+
+
+    this.investmentService
+      .sellStock({
+
+        symbol:
+          this.stock.symbol,
+
+        quantity:
+          this.sellQuantity
+
+      })
+      .subscribe({
+
+        next: (response) => {
+
+          console.log(
+            '✅ HİSSE SATILDI:',
+            response
+          );
+
+
+          this.dialogRef.close({
+
+            type: 'SELL',
+
+            result:
+              response.data
+
+          });
+
+        },
+
+
+        error: (err) => {
+
+          console.error(
+            '❌ Hisse satılamadı:',
+            err
+          );
+
+
+          this.submitting = false;
+
+
+          this.errorMessage =
+            err?.error?.message ??
+            'Hisse satış işlemi gerçekleştirilemedi.';
+
+
+          this.cdr.detectChanges();
+
+        }
+
+      });
+
+  }
+
+
+  // =========================
+  // HELPERS
+  // =========================
+
+  isPositive(
+    value: number
+  ): boolean {
+
+    return value >= 0;
+
+  }
+
+
+  formatPercent(
+    value: number
+  ): string {
+
+    return `${(
+      value * 100
+    ).toFixed(2)}%`;
+
+  }
+
+
+  // =========================
+  // DESTROY
+  // =========================
+
+  ngOnDestroy(): void {
+
+    if (this.chart) {
+
+      this.chart.destroy();
+
+      this.chart = null;
+
+    }
+
+  }
+
 }

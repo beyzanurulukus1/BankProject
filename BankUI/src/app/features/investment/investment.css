@@ -545,3 +545,398 @@
   }
 
 }
+.portfolio-section {
+  margin-bottom: 34px;
+}
+
+.portfolio-dashboard {
+  display: grid;
+
+  grid-template-columns:
+    minmax(300px, 0.9fr)
+    minmax(0, 1.4fr);
+
+  gap: 20px;
+
+  align-items: stretch;
+}
+
+.portfolio-chart-card,
+.portfolio-summary-side {
+  background: white;
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.portfolio-chart-card {
+  min-height: 390px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 25px;
+}
+
+.portfolio-chart {
+  position: relative;
+
+  width: 100%;
+
+  height: 320px;
+}
+
+.chart-center {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(
+    -50%,
+    -50%
+  );
+
+  text-align: center;
+
+  pointer-events: none;
+}
+
+.chart-center span {
+  display: block;
+
+  color: #888;
+
+  font-size: 12px;
+
+  margin-bottom: 6px;
+}
+
+.chart-center strong {
+  font-size: 22px;
+}
+
+.portfolio-summary-side {
+  padding: 22px;
+}
+
+.portfolio-summary-side {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.portfolio-summary-card {
+  padding: 16px;
+
+  background: #f7f8fa;
+
+  border-radius: 14px;
+}
+
+.portfolio-summary-card span {
+  display: block;
+
+  color: #888;
+
+  font-size: 12px;
+
+  margin-bottom: 5px;
+}
+
+.portfolio-summary-card strong {
+  font-size: 22px;
+}
+
+.portfolio-summary-card small {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+.portfolio-summary-card.profit,
+.position-right.profit {
+  color: #198754;
+}
+
+.portfolio-summary-card.loss,
+.position-right.loss {
+  color: #dc3545;
+}
+
+.portfolio-position-list {
+  border-top: 1px solid #eee;
+
+  padding-top: 10px;
+}
+
+.portfolio-position-item {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr auto;
+
+  gap: 15px;
+
+  align-items: center;
+
+  padding: 14px 0;
+
+  border-bottom: 1px solid #eee;
+}
+
+.portfolio-position-item:last-child {
+  border-bottom: none;
+}
+
+.position-symbol {
+  font-size: 17px;
+
+  font-weight: 700;
+}
+
+.position-quantity {
+  margin-top: 3px;
+
+  color: #888;
+
+  font-size: 12px;
+}
+
+.position-middle span {
+  display: block;
+
+  color: #888;
+
+  font-size: 11px;
+
+  margin-bottom: 4px;
+}
+
+.position-middle strong {
+  font-size: 14px;
+}
+
+.position-right {
+  text-align: right;
+}
+
+.position-right strong {
+  display: block;
+
+  font-size: 14px;
+}
+
+.position-right span {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 11px;
+}
+
+@media (max-width: 900px) {
+
+  .portfolio-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .portfolio-position-item {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .position-right {
+    text-align: left;
+  }
+
+}
+ .investment-history-section {
+  margin-bottom: 34px;
+}
+
+.realized-summary {
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 20px 22px;
+
+  margin-bottom: 14px;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.realized-summary span {
+  display: block;
+
+  color: #888;
+
+  font-size: 12px;
+
+  margin-bottom: 6px;
+}
+
+.realized-summary strong {
+  font-size: 24px;
+}
+
+.realized-summary.profit strong,
+.history-profit.profit strong {
+  color: #198754;
+}
+
+.realized-summary.loss strong,
+.history-profit.loss strong {
+  color: #dc3545;
+}
+
+.investment-history-list {
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 0 22px;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.investment-history-item {
+  display: grid;
+
+  grid-template-columns:
+    auto
+    1fr
+    1fr
+    1fr
+    1fr
+    auto;
+
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 17px 0;
+
+  border-bottom: 1px solid #eee;
+}
+
+.investment-history-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-width: 52px;
+
+  padding: 6px 9px;
+
+  border-radius: 8px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+}
+
+.transaction-badge.buy {
+  background: #eef6ff;
+
+  color: #2477c5;
+}
+
+.transaction-badge.sell {
+  background: #fff0f0;
+
+  color: #c62828;
+}
+
+.history-main strong {
+  display: block;
+
+  font-size: 15px;
+}
+
+.history-main span,
+.history-price span,
+.history-total span,
+.history-profit span {
+  display: block;
+
+  color: #888;
+
+  font-size: 11px;
+
+  margin-bottom: 4px;
+}
+
+.history-price strong,
+.history-total strong,
+.history-profit strong {
+  font-size: 14px;
+}
+
+.history-date {
+  color: #888;
+
+  font-size: 11px;
+
+  text-align: right;
+}
+
+@media (max-width: 1000px) {
+
+  .investment-history-item {
+    grid-template-columns:
+      auto 1fr 1fr;
+
+  }
+
+  .history-profit,
+  .history-date {
+    text-align: left;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .investment-history-list {
+    padding: 0 16px;
+  }
+
+  .investment-history-item {
+    grid-template-columns:
+      auto 1fr;
+
+    gap: 10px 14px;
+  }
+
+  .history-price,
+  .history-total,
+  .history-profit,
+  .history-date {
+    grid-column: 2;
+  }
+
+}

@@ -1,6 +1,7 @@
 import {
   ChangeDetectorRef,
   Component,
+  OnDestroy,
   OnInit,
   inject
 } from '@angular/core';
@@ -8,6 +9,12 @@ import {
 import { CommonModule } from '@angular/common';
 
 import { MatDialog } from '@angular/material/dialog';
+
+import {
+  Chart,
+  ChartConfiguration,
+  registerables
+} from 'chart.js';
 
 import { DepositInvestmentDialog } from './deposit-investment-dialog/deposit-investment-dialog';
 import { StockDetailDialog } from './stock-detail-dialog/stock-detail-dialog';
@@ -17,8 +24,11 @@ import {
   InvestmentAccount,
   MarketIndex,
   Stock,
-  Portfolio
+  Portfolio,
+  InvestmentTransactionSummary,
+  InvestmentTransaction
 } from '../../core/services/investment';
+
 
 @Component({
   selector: 'app-investment',
@@ -29,28 +39,50 @@ import {
   templateUrl: './investment.html',
   styleUrl: './investment.css'
 })
-export class InvestmentComponent implements OnInit {
+export class InvestmentComponent
+  implements OnInit, OnDestroy {
+
 
   // =========================
   // SERVICES
   // =========================
 
-  private investmentService = inject(InvestmentService);
-  private cdr = inject(ChangeDetectorRef);
-  private dialog = inject(MatDialog);
+  private investmentService =
+    inject(InvestmentService);
+
+  private cdr =
+    inject(ChangeDetectorRef);
+
+  private dialog =
+    inject(MatDialog);
 
 
   // =========================
   // DATA
   // =========================
 
-  investmentAccount: InvestmentAccount | null = null;
+  investmentAccount:
+    InvestmentAccount | null = null;
 
-  portfolio: Portfolio | null = null;
+  portfolio:
+    Portfolio | null = null;
 
-  index: MarketIndex | null = null;
+  investmentTransactions:
+    InvestmentTransactionSummary | null = null;
 
-  stocks: Stock[] = [];
+  index:
+    MarketIndex | null = null;
+
+  stocks:
+    Stock[] = [];
+
+
+  // =========================
+  // CHART
+  // =========================
+
+  portfolioChart:
+    Chart | null = null;
 
 
   // =========================
@@ -60,6 +92,8 @@ export class InvestmentComponent implements OnInit {
   loading = true;
 
   errorMessage = '';
+
+  showAllTransactions = false;
 
 
   // =========================
@@ -74,6 +108,19 @@ export class InvestmentComponent implements OnInit {
 
 
   // =========================
+  // CONSTRUCTOR
+  // =========================
+
+  constructor() {
+
+    Chart.register(
+      ...registerables
+    );
+
+  }
+
+
+  // =========================
   // LIFECYCLE
   // =========================
 
@@ -82,6 +129,8 @@ export class InvestmentComponent implements OnInit {
     this.loadInvestmentAccount();
 
     this.loadPortfolio();
+
+    this.loadInvestmentTransactions();
 
     this.loadMarketData();
 
@@ -109,6 +158,7 @@ export class InvestmentComponent implements OnInit {
             response.data;
 
           this.cdr.detectChanges();
+
         },
 
         error: (err) => {
@@ -121,6 +171,7 @@ export class InvestmentComponent implements OnInit {
         }
 
       });
+
   }
 
 
@@ -145,6 +196,13 @@ export class InvestmentComponent implements OnInit {
             response.data;
 
           this.cdr.detectChanges();
+
+          setTimeout(() => {
+
+            this.createPortfolioChart();
+
+          });
+
         },
 
         error: (err) => {
@@ -154,9 +212,286 @@ export class InvestmentComponent implements OnInit {
             err
           );
 
+          this.portfolio = null;
+
+          if (this.portfolioChart) {
+
+            this.portfolioChart.destroy();
+
+            this.portfolioChart = null;
+
+          }
+
         }
 
       });
+
+  }
+
+
+  // =========================
+  // INVESTMENT TRANSACTIONS
+  // =========================
+
+  loadInvestmentTransactions(): void {
+
+    this.investmentService
+      .getInvestmentTransactions()
+      .subscribe({
+
+        next: (response) => {
+
+          console.log(
+            '✅ YATIRIM İŞLEM GEÇMİŞİ:',
+            response
+          );
+
+          this.investmentTransactions =
+            response.data;
+
+          this.cdr.detectChanges();
+
+        },
+
+        error: (err) => {
+
+          console.error(
+            '❌ Yatırım işlem geçmişi alınamadı:',
+            err
+          );
+
+          this.investmentTransactions =
+            null;
+
+        }
+
+      });
+
+  }
+
+
+  // =========================
+  // VISIBLE TRANSACTIONS
+  // =========================
+
+  get visibleTransactions(): InvestmentTransaction[] {
+
+    if (!this.investmentTransactions) {
+
+      return [];
+
+    }
+
+    if (this.showAllTransactions) {
+
+      return this.investmentTransactions.transactions;
+
+    }
+
+    return this.investmentTransactions.transactions
+      .slice(0, 5);
+
+  }
+
+
+  // =========================
+  // TOGGLE TRANSACTION HISTORY
+  // =========================
+
+  toggleTransactionHistory(): void {
+
+    this.showAllTransactions =
+      !this.showAllTransactions;
+
+  }
+
+
+  // =========================
+  // PORTFOLIO CHART DATA
+  // =========================
+
+  getPortfolioChartData(): {
+    labels: string[];
+    values: number[];
+  } {
+
+    if (
+      !this.portfolio ||
+      this.portfolio.positions.length === 0
+    ) {
+
+      return {
+        labels: [],
+        values: []
+      };
+
+    }
+
+    return {
+
+      labels:
+        this.portfolio.positions.map(
+          position =>
+            position.symbol
+        ),
+
+      values:
+        this.portfolio.positions.map(
+          position =>
+            position.currentValue
+        )
+
+    };
+
+  }
+
+
+  // =========================
+  // CREATE PORTFOLIO CHART
+  // =========================
+
+  createPortfolioChart(): void {
+
+    const canvas =
+      document.getElementById(
+        'portfolioChart'
+      ) as HTMLCanvasElement | null;
+
+
+    if (
+      !canvas ||
+      !this.portfolio ||
+      this.portfolio.positions.length === 0
+    ) {
+
+      if (this.portfolioChart) {
+
+        this.portfolioChart.destroy();
+
+        this.portfolioChart = null;
+
+      }
+
+      return;
+
+    }
+
+
+    if (this.portfolioChart) {
+
+      this.portfolioChart.destroy();
+
+      this.portfolioChart = null;
+
+    }
+
+
+    const chartData =
+      this.getPortfolioChartData();
+
+
+    const config:
+      ChartConfiguration<'doughnut'> = {
+
+      type: 'doughnut',
+
+      data: {
+
+        labels:
+          chartData.labels,
+
+        datasets: [
+
+          {
+
+            data:
+              chartData.values,
+
+            borderWidth: 2,
+
+            hoverOffset: 6
+
+          }
+
+        ]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        cutout: '68%',
+
+        plugins: {
+
+          legend: {
+            display: false
+          },
+
+          tooltip: {
+
+            callbacks: {
+
+              label: (context) => {
+
+                const value =
+                  Number(
+                    context.raw ?? 0
+                  );
+
+                const total =
+                  chartData.values.reduce(
+                    (
+                      sum,
+                      current
+                    ) =>
+                      sum + current,
+                    0
+                  );
+
+                const percentage =
+                  total === 0
+                    ? 0
+                    : (
+                        value / total
+                      ) * 100;
+
+                return ` ${
+                  context.label
+                }: ${
+                  value.toLocaleString(
+                    'tr-TR',
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    }
+                  )
+                } ₺ (${
+                  percentage.toFixed(2)
+                }%)`;
+
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+
+    };
+
+
+    this.portfolioChart =
+      new Chart(
+        canvas,
+        config
+      );
+
   }
 
 
@@ -185,6 +520,7 @@ export class InvestmentComponent implements OnInit {
             response.data;
 
           this.loadPopularStocks();
+
         },
 
         error: (err) => {
@@ -200,9 +536,11 @@ export class InvestmentComponent implements OnInit {
             'Piyasa verileri alınamadı.';
 
           this.cdr.detectChanges();
+
         }
 
       });
+
   }
 
 
@@ -240,6 +578,7 @@ export class InvestmentComponent implements OnInit {
                 this.loading = false;
 
                 this.cdr.detectChanges();
+
               }
 
             },
@@ -261,6 +600,7 @@ export class InvestmentComponent implements OnInit {
                 this.loading = false;
 
                 this.cdr.detectChanges();
+
               }
 
             }
@@ -269,11 +609,12 @@ export class InvestmentComponent implements OnInit {
 
       }
     );
+
   }
 
 
   // =========================
-  // DIALOGS
+  // DEPOSIT DIALOG
   // =========================
 
   openDepositDialog(): void {
@@ -281,6 +622,7 @@ export class InvestmentComponent implements OnInit {
     if (!this.investmentAccount) {
       return;
     }
+
 
     const dialogRef =
       this.dialog.open(
@@ -292,6 +634,7 @@ export class InvestmentComponent implements OnInit {
         }
       );
 
+
     dialogRef
       .afterClosed()
       .subscribe(
@@ -301,73 +644,115 @@ export class InvestmentComponent implements OnInit {
             return;
           }
 
+
           this.investmentAccount =
             updatedAccount;
 
+
           this.cdr.detectChanges();
 
-          // Para aktarımı sonrası
-          // portföy/hesap verilerini de
-          // yeniden güncel tutuyoruz.
+
           this.loadPortfolio();
+
+          this.loadInvestmentTransactions();
 
         }
       );
+
   }
 
 
-openStockDetail(stock: Stock): void {
+  // =========================
+  // STOCK DETAIL DIALOG
+  // =========================
 
-  const dialogRef = this.dialog.open(
-    StockDetailDialog,
-    {
-      width: '520px',
-      maxWidth: '95vw',
-      data: stock
-    }
-  );
+  openStockDetail(
+    stock: Stock
+  ): void {
 
-  dialogRef.afterClosed().subscribe(
-    (result) => {
+    const dialogRef =
+      this.dialog.open(
+        StockDetailDialog,
+        {
+          width: '520px',
+          maxWidth: '95vw',
+          data: stock
+        }
+      );
 
-      if (!result) {
-        return;
-      }
 
-      if (result.type === 'BUY') {
+    dialogRef
+      .afterClosed()
+      .subscribe(
+        (result) => {
 
-        console.log(
-          '✅ BUY tamamlandı:',
-          result.result
-        );
+          if (!result) {
+            return;
+          }
 
-        this.loadInvestmentAccount();
 
-        this.loadPortfolio();
+          if (
+            result.type === 'BUY' ||
+            result.type === 'SELL'
+          ) {
 
-      }
+            console.log(
+              `✅ ${result.type} tamamlandı:`,
+              result.result
+            );
 
-    }
-  );
-}
+
+            this.loadInvestmentAccount();
+
+            this.loadPortfolio();
+
+            this.loadInvestmentTransactions();
+
+          }
+
+        }
+      );
+
+  }
 
 
   // =========================
   // HELPERS
   // =========================
 
-  isPositive(value: number): boolean {
+  isPositive(
+    value: number
+  ): boolean {
 
     return value >= 0;
 
   }
 
 
-  formatPercent(value: number): string {
+  formatPercent(
+    value: number
+  ): string {
 
     return `${(
       value * 100
     ).toFixed(2)}%`;
+
+  }
+
+
+  // =========================
+  // DESTROY
+  // =========================
+
+  ngOnDestroy(): void {
+
+    if (this.portfolioChart) {
+
+      this.portfolioChart.destroy();
+
+      this.portfolioChart = null;
+
+    }
 
   }
 

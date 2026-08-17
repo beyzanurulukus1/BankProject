@@ -214,6 +214,73 @@
   </button>
 
 </div>
+<div
+  *ngIf="portfolioPosition"
+  class="sell-section">
+
+  <div class="sell-title">
+    Hisse Sat
+  </div>
+
+  <div class="sell-available">
+
+    Portföyünüzde:
+    <strong>
+      {{ portfolioPosition.quantity | number:'1.0-4' }}
+    </strong>
+    adet
+
+  </div>
+
+  <div class="sell-input">
+
+    <label>
+      Satılacak Adet
+    </label>
+
+    <input
+      type="number"
+      min="1"
+      [max]="portfolioPosition.quantity"
+      step="1"
+      [formControl]="sellForm.controls.quantity">
+
+  </div>
+
+  <div class="sell-info">
+
+    <div>
+      <span>Güncel fiyat</span>
+
+      <strong>
+        {{ stock.price | number:'1.2-2' }} ₺
+      </strong>
+    </div>
+
+    <div>
+      <span>Tahmini satış tutarı</span>
+
+      <strong>
+        {{
+          sellQuantity * stock.price
+          | number:'1.2-2'
+        }} ₺
+      </strong>
+    </div>
+
+  </div>
+
+  <button
+    type="button"
+    class="sell-button"
+    [disabled]="!canSell"
+    (click)="sell()">
+
+    {{ submitting ? 'Satılıyor...' : 'Sat' }}
+
+  </button>
+
+</div>
 
 <div class="chart-container">
 

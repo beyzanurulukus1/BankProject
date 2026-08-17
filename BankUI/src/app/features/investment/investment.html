@@ -1,19 +1,27 @@
 <div class="investment-page">
 
+  <!-- ========================================= -->
   <!-- HEADER -->
+  <!-- ========================================= -->
 
   <div class="page-header">
+
     <div>
+
       <h1>Yatırımlar</h1>
 
       <p>
         BIST piyasalarını ve güncel hisse fiyatlarını takip edebilirsiniz.
       </p>
+
     </div>
+
   </div>
 
 
+  <!-- ========================================= -->
   <!-- INVESTMENT ACCOUNT -->
+  <!-- ========================================= -->
 
   <section
     *ngIf="investmentAccount"
@@ -35,6 +43,7 @@
 
     </div>
 
+
     <button
       type="button"
       class="deposit-button"
@@ -47,7 +56,9 @@
   </section>
 
 
-  <!-- PORTFÖY -->
+  <!-- ========================================= -->
+  <!-- PORTFOLIO -->
+  <!-- ========================================= -->
 
   <section
     *ngIf="portfolio && portfolio.positions.length > 0"
@@ -60,7 +71,7 @@
         <h2>Portföyüm</h2>
 
         <p>
-          Mevcut yatırımlarınız ve kâr/zarar durumunuz
+          Yatırımlarınızın güncel dağılımı ve performansı
         </p>
 
       </div>
@@ -68,162 +79,138 @@
     </div>
 
 
-    <!-- PORTFÖY ÖZETİ -->
+    <div class="portfolio-dashboard">
 
-    <div class="portfolio-summary">
+      <!-- ===================================== -->
+      <!-- DONUT CHART -->
+      <!-- ===================================== -->
 
-      <div class="portfolio-summary-card">
+      <div class="portfolio-chart-card">
 
-        <span>
-          Toplam Portföy Değeri
-        </span>
+        <div class="portfolio-chart">
 
-        <strong>
-          {{ portfolio.totalValue | number:'1.2-2' }} ₺
-        </strong>
+          <canvas id="portfolioChart"></canvas>
 
-      </div>
-
-
-      <div class="portfolio-summary-card">
-
-        <span>
-          Toplam Maliyet
-        </span>
-
-        <strong>
-          {{ portfolio.totalCost | number:'1.2-2' }} ₺
-        </strong>
-
-      </div>
-
-
-      <div
-        class="portfolio-summary-card"
-        [class.profit]="portfolio.totalProfitLoss >= 0"
-        [class.loss]="portfolio.totalProfitLoss < 0">
-
-        <span>
-          Toplam Kâr / Zarar
-        </span>
-
-        <strong>
-
-          {{ portfolio.totalProfitLoss >= 0 ? '+' : '' }}
-
-          {{ portfolio.totalProfitLoss | number:'1.2-2' }} ₺
-
-        </strong>
-
-        <small>
-
-          {{ portfolio.totalProfitLoss >= 0 ? '+' : '' }}
-
-          {{ portfolio.totalProfitLossPercent | number:'1.2-2' }}%
-
-        </small>
-
-      </div>
-
-    </div>
-
-
-    <!-- POZİSYONLAR -->
-
-    <div class="portfolio-positions">
-
-      <div
-        class="position-card"
-        *ngFor="let position of portfolio.positions">
-
-        <div class="position-header">
-
-          <div>
-
-            <h3>
-              {{ position.symbol }}
-            </h3>
+          <div class="chart-center">
 
             <span>
-              {{ position.quantitiy | number:'1.0-4' }} adet
+              Portföy Değeri
             </span>
 
-          </div>
-
-
-          <div
-            class="position-profit"
-            [class.profit]="position.profitLoss >= 0"
-            [class.loss]="position.profitLoss < 0">
-
-            {{ position.profitLoss >= 0 ? '+' : '' }}
-
-            {{ position.profitLoss | number:'1.2-2' }} ₺
-
-            <small>
-
-              (
-              {{ position.profitLoss >= 0 ? '+' : '' }}
-              {{ position.profitLossPercent | number:'1.2-2' }}%
-              )
-
-            </small>
+            <strong>
+              {{ portfolio.totalValue | number:'1.2-2' }} ₺
+            </strong>
 
           </div>
 
         </div>
 
-
-        <div class="position-details">
-
-          <div>
-
-            <span>
-              Ortalama Maliyet
-            </span>
-
-            <strong>
-              {{ position.avarageCost | number:'1.2-2' }} ₺
-            </strong>
-
-          </div>
+      </div>
 
 
-          <div>
+      <!-- ===================================== -->
+      <!-- PORTFOLIO SUMMARY -->
+      <!-- ===================================== -->
 
-            <span>
-              Güncel Fiyat
-            </span>
+      <div class="portfolio-summary-side">
 
-            <strong>
-              {{ position.currencyPrice | number:'1.2-2' }} ₺
-            </strong>
+        <div class="portfolio-summary-card">
 
-          </div>
+          <span>
+            Toplam Maliyet
+          </span>
 
+          <strong>
+            {{ portfolio.totalCost | number:'1.2-2' }} ₺
+          </strong>
 
-          <div>
-
-            <span>
-              Toplam Maliyet
-            </span>
-
-            <strong>
-              {{ position.totalCost | number:'1.2-2' }} ₺
-            </strong>
-
-          </div>
+        </div>
 
 
-          <div>
+        <div
+          class="portfolio-summary-card"
+          [class.profit]="portfolio.totalProfitLoss >= 0"
+          [class.loss]="portfolio.totalProfitLoss < 0">
 
-            <span>
-              Güncel Değer
-            </span>
+          <span>
+            Toplam Kâr / Zarar
+          </span>
 
-            <strong>
-              {{ position.currentValue | number:'1.2-2' }} ₺
-            </strong>
+          <strong>
+
+            {{ portfolio.totalProfitLoss >= 0 ? '+' : '' }}
+
+            {{ portfolio.totalProfitLoss | number:'1.2-2' }} ₺
+
+          </strong>
+
+          <small>
+
+            {{ portfolio.totalProfitLoss >= 0 ? '+' : '' }}
+
+            {{ portfolio.totalProfitLossPercent | number:'1.2-2' }}%
+
+          </small>
+
+        </div>
+
+
+        <!-- POSITION LIST -->
+
+        <div class="portfolio-position-list">
+
+          <div
+            class="portfolio-position-item"
+            *ngFor="let position of portfolio.positions">
+
+            <div class="position-left">
+
+              <div class="position-symbol">
+                {{ position.symbol }}
+              </div>
+
+              <div class="position-quantity">
+                {{ position.quantity | number:'1.0-4' }} adet
+              </div>
+
+            </div>
+
+
+            <div class="position-middle">
+
+              <span>
+                Güncel Değer
+              </span>
+
+              <strong>
+                {{ position.currentValue | number:'1.2-2' }} ₺
+              </strong>
+
+            </div>
+
+
+            <div
+              class="position-right"
+              [class.profit]="position.profitLoss >= 0"
+              [class.loss]="position.profitLoss < 0">
+
+              <strong>
+
+                {{ position.profitLoss >= 0 ? '+' : '' }}
+
+                {{ position.profitLoss | number:'1.2-2' }} ₺
+
+              </strong>
+
+              <span>
+
+                {{ position.profitLoss >= 0 ? '+' : '' }}
+
+                {{ position.profitLossPercent | number:'1.2-2' }}%
+
+              </span>
+
+            </div>
 
           </div>
 
@@ -236,7 +223,26 @@
   </section>
 
 
+  <!-- ========================================= -->
+  <!-- EMPTY PORTFOLIO -->
+  <!-- ========================================= -->
+
+  <section
+    *ngIf="portfolio && portfolio.positions.length === 0"
+    class="portfolio-empty">
+
+    <h2>Portföyünüz henüz boş</h2>
+
+    <p>
+      Hisse satın aldığınızda yatırımlarınız burada görünecek.
+    </p>
+
+  </section>
+
+
+  <!-- ========================================= -->
   <!-- BIST 100 -->
+  <!-- ========================================= -->
 
   <section
     *ngIf="!loading && index"
@@ -273,7 +279,9 @@
   </section>
 
 
-  <!-- LOADING -->
+  <!-- ========================================= -->
+  <!-- MARKET LOADING -->
+  <!-- ========================================= -->
 
   <div
     *ngIf="loading"
@@ -290,7 +298,9 @@
   </div>
 
 
-  <!-- ERROR -->
+  <!-- ========================================= -->
+  <!-- MARKET ERROR -->
+  <!-- ========================================= -->
 
   <div
     *ngIf="!loading && errorMessage"
@@ -307,7 +317,9 @@
   </div>
 
 
-  <!-- POPÜLER HİSSELER -->
+  <!-- ========================================= -->
+  <!-- POPULAR STOCKS -->
+  <!-- ========================================= -->
 
   <section
     *ngIf="!loading && !errorMessage"
@@ -338,6 +350,8 @@
         *ngFor="let stock of stocks"
         (click)="openStockDetail(stock)">
 
+        <!-- STOCK HEADER -->
+
         <div class="stock-header">
 
           <div>
@@ -365,10 +379,16 @@
         </div>
 
 
+        <!-- PRICE -->
+
         <div class="stock-price">
+
           {{ stock.price | number:'1.2-2' }} ₺
+
         </div>
 
+
+        <!-- CHANGE -->
 
         <div
           class="stock-change"
@@ -388,6 +408,8 @@
 
         <div class="stock-divider"></div>
 
+
+        <!-- SUMMARY -->
 
         <div class="stock-summary">
 
@@ -419,6 +441,8 @@
         </div>
 
 
+        <!-- DETAIL -->
+
         <div class="view-detail">
           Detayları görüntüle →
         </div>
@@ -428,5 +452,223 @@
     </div>
 
   </section>
+
+
+  <!-- ========================================= -->
+  <!-- INVESTMENT TRANSACTION HISTORY -->
+  <!-- EN SONDAYIZ -->
+  <!-- ========================================= -->
+
+  <section
+    *ngIf="
+      investmentTransactions &&
+      investmentTransactions.transactions.length > 0
+    "
+    class="investment-history-section">
+
+    <div class="section-header">
+
+      <div>
+
+        <h2>
+          Yatırım İşlem Geçmişim
+        </h2>
+
+        <p>
+          Gerçekleştirdiğiniz alış ve satış işlemleri
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- TOTAL REALIZED P/L -->
+
+    <div
+      class="realized-summary"
+      [class.profit]="
+        investmentTransactions.totalRealizedProfitLoss >= 0
+      "
+      [class.loss]="
+        investmentTransactions.totalRealizedProfitLoss < 0
+      ">
+
+      <span>
+        Toplam Gerçekleşmiş Kâr / Zarar
+      </span>
+
+      <strong>
+
+        {{
+          investmentTransactions.totalRealizedProfitLoss >= 0
+            ? '+'
+            : ''
+        }}
+
+        {{
+          investmentTransactions.totalRealizedProfitLoss
+            | number:'1.2-2'
+        }}
+
+        ₺
+
+      </strong>
+
+    </div>
+
+
+    <!-- TRANSACTIONS -->
+
+    <div class="investment-history-list">
+
+      <div
+        class="investment-history-item"
+        *ngFor="let transaction of visibleTransactions">
+
+        <!-- TYPE -->
+
+        <div class="history-type">
+
+          <span
+            class="transaction-badge"
+            [class.buy]="
+              transaction.transactionType === 'BUY'
+            "
+            [class.sell]="
+              transaction.transactionType === 'SELL'
+            ">
+
+            {{
+              transaction.transactionType === 'BUY'
+                ? 'ALIŞ'
+                : 'SATIŞ'
+            }}
+
+          </span>
+
+        </div>
+
+
+        <!-- SYMBOL -->
+
+        <div class="history-main">
+
+          <strong>
+            {{ transaction.symbol }}
+          </strong>
+
+          <span>
+            {{ transaction.quantity | number:'1.0-4' }}
+            adet
+          </span>
+
+        </div>
+
+
+        <!-- PRICE -->
+
+        <div class="history-price">
+
+          <span>
+            İşlem Fiyatı
+          </span>
+
+          <strong>
+            {{ transaction.price | number:'1.2-2' }} ₺
+          </strong>
+
+        </div>
+
+
+        <!-- TOTAL -->
+
+        <div class="history-total">
+
+          <span>
+            Toplam
+          </span>
+
+          <strong>
+            {{ transaction.totalAmount | number:'1.2-2' }} ₺
+          </strong>
+
+        </div>
+
+
+        <!-- REALIZED P/L -->
+
+        <div
+          class="history-profit"
+          *ngIf="
+            transaction.transactionType === 'SELL'
+          "
+          [class.profit]="
+            (transaction.realizedProfitLoss ?? 0) >= 0
+          "
+          [class.loss]="
+            (transaction.realizedProfitLoss ?? 0) < 0
+          ">
+
+          <span>
+            Gerçekleşmiş K/Z
+          </span>
+
+          <strong>
+
+            {{
+              (transaction.realizedProfitLoss ?? 0) >= 0
+                ? '+'
+                : ''
+            }}
+
+            {{
+              transaction.realizedProfitLoss
+                | number:'1.2-2'
+            }}
+
+            ₺
+
+          </strong>
+
+        </div>
+
+
+        <!-- DATE -->
+
+        <div class="history-date">
+
+          {{
+            transaction.createdAt
+              | date:'dd.MM.yyyy HH:mm'
+          }}
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- SHOW MORE / SHOW LESS -->
+
+    <button
+      *ngIf="
+        investmentTransactions.transactions.length > 5
+      "
+      type="button"
+      class="transaction-toggle-button"
+      (click)="toggleTransactionHistory()">
+
+      {{
+        showAllTransactions
+          ? 'Son 5 işlemi göster'
+          : 'Tüm işlemleri göster'
+      }}
+
+    </button>
+
+  </section>
+
 
 </div>
