@@ -18,8 +18,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
-import { forkJoin } from 'rxjs';
-
 import { AccountService } from '../../../../core/services/account';
 
 import {
@@ -48,6 +46,7 @@ export class ExchangeDialog implements OnInit {
   private fb = inject(FormBuilder);
   private accountService = inject(AccountService);
   private exchangeRateService = inject(ExchangeRateService);
+  private cdr = inject(ChangeDetectorRef);
 
   exchangeForm: FormGroup;
 
@@ -58,20 +57,26 @@ export class ExchangeDialog implements OnInit {
   selectedRate: ExchangeRate | null = null;
   convertedAmount: number | null = null;
 
-  rateType: 'BUYING' | 'SELLING' | null = null;
+  rateType: 'BUYING' | 'SELLING' | 'CROSS' | null = null;
 
   isLoading = true;
   isSubmitting = false;
 
   loadError = '';
-    private cdr = inject(ChangeDetectorRef);
+
   constructor(
     private dialogRef: MatDialogRef<ExchangeDialog>,
+
     @Inject(MAT_DIALOG_DATA)
     public sourceAccount: AccountResponse
   ) {
+
     this.exchangeForm = this.fb.group({
-      targetAccountId: ['', Validators.required],
+
+      targetAccountId: [
+        '',
+        Validators.required
+      ],
 
       amount: [
         '',
@@ -81,100 +86,237 @@ export class ExchangeDialog implements OnInit {
         ]
       ],
 
-      description: ['Döviz Dönüşümü']
+      description: [
+        'Döviz Dönüşümü'
+      ]
+
     });
   }
 
+  // ============================================================
+  // INIT
+  // ============================================================
+
   ngOnInit(): void {
-    console.log('💱 ExchangeDialog başladı');
+
+    console.log('================================');
+    console.log('💱 EXCHANGE DIALOG BAŞLADI');
+    console.log('================================');
+
     console.log('💰 Kaynak hesap:', this.sourceAccount);
 
     this.loadData();
   }
 
-loadData(): void {
+  // ============================================================
+  // VERİLERİ YÜKLE
+  // ============================================================
 
-  this.isLoading = true;
-  this.loadError = '';
+  loadData(): void {
 
-  forkJoin({
-    accounts: this.accountService.getMyAccounts(),
-    rates: this.exchangeRateService.getRates()
-  }).subscribe({
+    this.isLoading = true;
+    this.loadError = '';
 
-    next: (response) => {
+    this.accountService.getMyAccounts().subscribe({
 
-      console.log('✅ Exchange hesapları:', response.accounts);
-      console.log('✅ Exchange kurları:', response.rates);
+      next: (accountsResponse) => {
 
-      this.accounts = response.accounts.data;
+        console.log('✅ HESAPLAR GELDİ:', accountsResponse);
 
-      this.targetAccounts = this.accounts.filter(
-        account =>
-          account.accountId !== this.sourceAccount.accountId &&
-          account.status === 'ACTIVE' &&
-          account.currencyCode !== this.sourceAccount.currencyCode
-      );
+        this.accounts =
+          accountsResponse.data ?? [];
 
-      this.exchangeRates = response.rates.data;
+        // --------------------------------------------------------
+        // Hedef hesapları belirle
+        // --------------------------------------------------------
 
-      console.log('🎯 Hedef hesaplar:', this.targetAccounts);
-      console.log('💱 Kurlar:', this.exchangeRates);
+        this.targetAccounts =
+          this.accounts.filter(account =>
 
-      this.isLoading = false;
+            account.accountId !==
+              this.sourceAccount.accountId &&
 
-      this.cdr.detectChanges();
+            account.status === 'ACTIVE' &&
 
-      this.updateCalculation();
+            account.currencyCode !==
+              this.sourceAccount.currencyCode
 
-      this.cdr.detectChanges();
-    },
+          );
 
-    error: (err) => {
+        console.log(
+          '🎯 HEDEF HESAPLAR:',
+          this.targetAccounts
+        );
 
-      console.error('❌ ExchangeDialog veri hatası:', err);
+        // --------------------------------------------------------
+        // KURLARI GETİR
+        // --------------------------------------------------------
 
-      this.loadError =
-        err?.error?.message ||
-        'Hesap veya kur bilgileri alınamadı.';
+        this.exchangeRateService.getRates().subscribe({
 
-      this.isLoading = false;
+          next: (ratesResponse) => {
 
-      this.cdr.detectChanges();
-    }
+            console.log(
+              '✅ KURLAR GELDİ:',
+              ratesResponse
+            );
 
-  });
-}
+            this.exchangeRates =
+              ratesResponse.data ?? [];
+
+            console.log(
+              '💱 EXCHANGE RATES:',
+              this.exchangeRates
+            );
+
+            this.isLoading = false;
+
+            this.cdr.detectChanges();
+
+          },
+
+          error: (err) => {
+
+            console.error(
+              '❌ KUR API HATASI:',
+              err
+            );
+
+            this.loadError =
+              err?.error?.message ||
+              'Döviz kurları alınamadı.';
+
+            this.isLoading = false;
+
+            this.cdr.detectChanges();
+          }
+
+        });
+      },
+
+      error: (err) => {
+
+        console.error(
+          '❌ HESAP API HATASI:',
+          err
+        );
+
+        this.loadError =
+          err?.error?.message ||
+          'Hesap bilgileri alınamadı.';
+
+        this.isLoading = false;
+
+        this.cdr.detectChanges();
+      }
+
+    });
+  }
+
+  // ============================================================
+  // HEDEF HESAP DEĞİŞTİ
+  // ============================================================
 
   onTargetAccountChange(): void {
-    this.updateCalculation();
-  }
 
-  onAmountChange(): void {
-    this.updateCalculation();
-  }
-
-  updateCalculation(): void {
-
-    const targetAccountId = Number(
+    console.log(
+      '🎯 Hedef hesap değişti:',
       this.exchangeForm.get('targetAccountId')?.value
     );
 
-    const amount = Number(
+    this.updateCalculation();
+  }
+
+  // ============================================================
+  // TUTAR DEĞİŞTİ
+  // ============================================================
+
+  onAmountChange(): void {
+
+    console.log(
+      '💰 Tutar değişti:',
       this.exchangeForm.get('amount')?.value
     );
 
-    if (!targetAccountId || !amount || amount <= 0) {
+    this.updateCalculation();
+  }
+
+  // ============================================================
+  // HESAPLAMA
+  // ============================================================
+
+  updateCalculation(): void {
+
+    const targetAccountId =
+      Number(
+        this.exchangeForm
+          .get('targetAccountId')
+          ?.value
+      );
+
+    const amount =
+      Number(
+        this.exchangeForm
+          .get('amount')
+          ?.value
+      );
+
+    console.log('================================');
+    console.log('💱 EXCHANGE CALCULATION');
+    console.log('================================');
+
+    console.log(
+      'Kaynak:',
+      this.sourceAccount.currencyCode
+    );
+
+    console.log(
+      'Hedef Account ID:',
+      targetAccountId
+    );
+
+    console.log(
+      'Tutar:',
+      amount
+    );
+
+    // --------------------------------------------------------
+    // Hedef veya tutar yok
+    // --------------------------------------------------------
+
+    if (
+      !targetAccountId ||
+      !amount ||
+      amount <= 0
+    ) {
 
       this.selectedRate = null;
       this.convertedAmount = null;
       this.rateType = null;
 
+      console.log(
+        '⛔ Hedef hesap veya tutar yok.'
+      );
+
+      this.cdr.detectChanges();
+
       return;
     }
 
-    const targetAccount = this.targetAccounts.find(
-      account => account.accountId === targetAccountId
+    // --------------------------------------------------------
+    // Hedef hesabı bul
+    // --------------------------------------------------------
+
+    const targetAccount =
+      this.targetAccounts.find(
+        account =>
+          account.accountId ===
+          targetAccountId
+      );
+
+    console.log(
+      '🎯 Bulunan hedef hesap:',
+      targetAccount
     );
 
     if (!targetAccount) {
@@ -183,109 +325,429 @@ loadData(): void {
       this.convertedAmount = null;
       this.rateType = null;
 
+      console.log(
+        '❌ Hedef hesap bulunamadı.'
+      );
+
       return;
     }
 
-    this.selectedRate = this.findRate(
-      this.sourceAccount.currencyCode,
-      targetAccount.currencyCode
+    const sourceCurrency =
+      this.sourceAccount.currencyCode;
+
+    const targetCurrency =
+      targetAccount.currencyCode;
+
+    console.log(
+      '💰 Kaynak para:',
+      sourceCurrency
     );
 
-    if (!this.selectedRate) {
+    console.log(
+      '💰 Hedef para:',
+      targetCurrency
+    );
 
+    // --------------------------------------------------------
+    // KURU BUL
+    // --------------------------------------------------------
+
+    const rate =
+      this.findRate(
+        sourceCurrency,
+        targetCurrency
+      );
+
+    console.log(
+      '💱 Bulunan kur:',
+      rate
+    );
+
+    if (!rate) {
+
+      this.selectedRate = null;
       this.convertedAmount = null;
       this.rateType = null;
 
+      console.log(
+        '❌ Bu dönüşüm için kur bulunamadı.'
+      );
+
+      this.cdr.detectChanges();
+
       return;
     }
 
+    this.selectedRate = rate;
+
+    // ========================================================
     // TRY -> USD / EUR
-    // Banka dövizi satıyor -> SATIŞ KURU
+    // ========================================================
+
     if (
-      this.sourceAccount.currencyCode === 'TRY' &&
-      targetAccount.currencyCode !== 'TRY'
+      sourceCurrency === 'TRY' &&
+      targetCurrency !== 'TRY'
     ) {
 
       this.rateType = 'SELLING';
 
+      const sellingRate =
+        rate.sellingRate;
+
       this.convertedAmount =
-        amount / this.selectedRate.sellingRate;
+        Number(
+          (
+            amount /
+            sellingRate
+          ).toFixed(2)
+        );
+
+      console.log('--------------------------------');
+      console.log('🏦 TRY -> DÖVİZ');
+      console.log(
+        'Kur tipi:',
+        'SELLING'
+      );
+
+      console.log(
+        'Satış kuru:',
+        sellingRate
+      );
+
+      console.log(
+        'Kaynak tutar:',
+        amount,
+        sourceCurrency
+      );
+
+      console.log(
+        'Alınacak:',
+        this.convertedAmount,
+        targetCurrency
+      );
+
+      console.log('--------------------------------');
+
+      this.cdr.detectChanges();
 
       return;
     }
 
+    // ========================================================
     // USD / EUR -> TRY
-    // Banka dövizi alıyor -> ALIŞ KURU
+    // ========================================================
+
     if (
-      this.sourceAccount.currencyCode !== 'TRY' &&
-      targetAccount.currencyCode === 'TRY'
+      sourceCurrency !== 'TRY' &&
+      targetCurrency === 'TRY'
     ) {
 
       this.rateType = 'BUYING';
 
+      const buyingRate =
+        rate.buyingRate;
+
       this.convertedAmount =
-        amount * this.selectedRate.buyingRate;
+        Number(
+          (
+            amount *
+            buyingRate
+          ).toFixed(2)
+        );
+
+      console.log('--------------------------------');
+      console.log('🏦 DÖVİZ -> TRY');
+      console.log(
+        'Kur tipi:',
+        'BUYING'
+      );
+
+      console.log(
+        'Alış kuru:',
+        buyingRate
+      );
+
+      console.log(
+        'Kaynak tutar:',
+        amount,
+        sourceCurrency
+      );
+
+      console.log(
+        'Alınacak:',
+        this.convertedAmount,
+        targetCurrency
+      );
+
+      console.log('--------------------------------');
+
+      this.cdr.detectChanges();
 
       return;
     }
 
+    // ========================================================
+    // USD -> EUR
+    // EUR -> USD
+    // ========================================================
+
+    if (
+      sourceCurrency !== 'TRY' &&
+      targetCurrency !== 'TRY'
+    ) {
+
+      this.rateType = 'CROSS';
+
+      /*
+        DB'deki cross rate doğrudan dönüşüm oranıdır.
+
+        Örneğin:
+
+        USD -> EUR
+
+        USD buying / EUR selling
+
+        sonucu DB'ye USD -> EUR olarak yazılmıştır.
+
+        Bu yüzden:
+
+        amount * rate
+      */
+
+      const crossRate =
+        rate.rate;
+
+      this.convertedAmount =
+        Number(
+          (
+            amount *
+            crossRate
+          ).toFixed(2)
+        );
+
+      console.log('--------------------------------');
+      console.log('🏦 DÖVİZ -> DÖVİZ');
+      console.log(
+        'Kur tipi:',
+        'CROSS'
+      );
+
+      console.log(
+        'Cross rate:',
+        crossRate
+      );
+
+      console.log(
+        'Kaynak tutar:',
+        amount,
+        sourceCurrency
+      );
+
+      console.log(
+        'Alınacak:',
+        this.convertedAmount,
+        targetCurrency
+      );
+
+      console.log('--------------------------------');
+
+      this.cdr.detectChanges();
+
+      return;
+    }
+
+    // --------------------------------------------------------
+    // Desteklenmeyen
+    // --------------------------------------------------------
+
+    this.selectedRate = null;
     this.convertedAmount = null;
     this.rateType = null;
+
+    console.log(
+      '❌ Desteklenmeyen para birimi dönüşümü.'
+    );
+
+    this.cdr.detectChanges();
   }
+
+  // ============================================================
+  // KUR BUL
+  // ============================================================
 
   findRate(
     sourceCurrency: string,
     targetCurrency: string
   ): ExchangeRate | null {
 
+    console.log('================================');
+    console.log('🔎 KUR ARANIYOR');
+    console.log({
+      sourceCurrency,
+      targetCurrency
+    });
+
+    console.log(
+      'Mevcut kurlar:',
+      this.exchangeRates
+    );
+
+    // --------------------------------------------------------
+    // Aynı para birimi
+    // --------------------------------------------------------
+
+    if (
+      sourceCurrency ===
+      targetCurrency
+    ) {
+
+      console.log(
+        '⛔ Aynı para birimi.'
+      );
+
+      return null;
+    }
+
+    // --------------------------------------------------------
+    // 1. DOĞRUDAN KUR
+    //
+    // USD -> EUR
+    // EUR -> USD
     // USD -> TRY
     // EUR -> TRY
-    if (targetCurrency === 'TRY') {
-
-      return this.exchangeRates.find(
-        rate =>
-          rate.fromCurrency === sourceCurrency &&
-          rate.toCurrency === 'TRY'
-      ) ?? null;
-    }
-
     // TRY -> USD
     // TRY -> EUR
-    if (sourceCurrency === 'TRY') {
+    // --------------------------------------------------------
 
-      return this.exchangeRates.find(
-        rate =>
-          rate.fromCurrency === targetCurrency &&
-          rate.toCurrency === 'TRY'
-      ) ?? null;
+    const directRate =
+      this.exchangeRates.find(rate =>
+
+        rate.fromCurrency
+          .trim()
+          .toUpperCase() ===
+          sourceCurrency
+            .trim()
+            .toUpperCase()
+
+        &&
+
+        rate.toCurrency
+          .trim()
+          .toUpperCase() ===
+          targetCurrency
+            .trim()
+            .toUpperCase()
+
+      );
+
+    if (directRate) {
+
+      console.log(
+        '✅ DOĞRUDAN KUR BULUNDU:',
+        directRate
+      );
+
+      return directRate;
     }
+
+    // --------------------------------------------------------
+    // Eğer burada geliyorsa DB'de o yön yok.
+    // --------------------------------------------------------
+
+    console.log(
+      '❌ DOĞRUDAN KUR YOK:',
+      `${sourceCurrency} -> ${targetCurrency}`
+    );
 
     return null;
   }
 
+  // ============================================================
+  // HEDEF PARA BİRİMİ
+  // ============================================================
+
   getTargetCurrency(): string {
 
-    const targetId = Number(
-      this.exchangeForm.get('targetAccountId')?.value
-    );
+    const targetId =
+      Number(
+        this.exchangeForm
+          .get('targetAccountId')
+          ?.value
+      );
 
-    return this.targetAccounts.find(
-      account => account.accountId === targetId
-    )?.currencyCode ?? '';
+    return (
+      this.targetAccounts.find(
+        account =>
+          account.accountId ===
+          targetId
+      )?.currencyCode ?? ''
+    );
   }
+
+  // ============================================================
+  // GÖSTERİLECEK KUR
+  // ============================================================
 
   getCurrentRate(): number | null {
 
-    if (!this.selectedRate || !this.rateType) {
+    if (
+      !this.selectedRate ||
+      !this.rateType
+    ) {
       return null;
     }
 
-    return this.rateType === 'BUYING'
-      ? this.selectedRate.buyingRate
-      : this.selectedRate.sellingRate;
+    if (
+      this.rateType === 'BUYING'
+    ) {
+
+      return this.selectedRate.buyingRate;
+    }
+
+    if (
+      this.rateType === 'SELLING'
+    ) {
+
+      return this.selectedRate.sellingRate;
+    }
+
+    // CROSS
+    return this.selectedRate.rate;
   }
 
+  // ============================================================
+  // SUBMIT
+  // ============================================================
+
   submit(): void {
+
+    console.log('================================');
+    console.log('🟢 SUBMIT ÇAĞRILDI');
+    console.log('================================');
+
+    console.log({
+      formValid:
+        this.exchangeForm.valid,
+
+      formValue:
+        this.exchangeForm.value,
+
+      convertedAmount:
+        this.convertedAmount,
+
+      isSubmitting:
+        this.isSubmitting,
+
+      selectedRate:
+        this.selectedRate,
+
+      rateType:
+        this.rateType
+    });
+
+    // --------------------------------------------------------
+    // Validation
+    // --------------------------------------------------------
 
     if (
       this.exchangeForm.invalid ||
@@ -294,40 +756,92 @@ loadData(): void {
       this.convertedAmount <= 0
     ) {
 
+      console.log(
+        '⛔ SUBMIT ENGELLENDİ'
+      );
+
       this.exchangeForm.markAllAsTouched();
+
       return;
     }
 
-    const targetAccountId = Number(
-      this.exchangeForm.get('targetAccountId')?.value
-    );
+    const targetAccountId =
+      Number(
+        this.exchangeForm
+          .get('targetAccountId')
+          ?.value
+      );
 
-    const amount = Number(
-      this.exchangeForm.get('amount')?.value
-    );
+    const amount =
+      Number(
+        this.exchangeForm
+          .get('amount')
+          ?.value
+      );
 
     const description =
-      this.exchangeForm.get('description')?.value ||
+      this.exchangeForm
+        .get('description')
+        ?.value ||
       'Döviz Dönüşümü';
+
+    console.log(
+      '📤 BACKEND\'E GÖNDERİLECEK:',
+      {
+        sourceAccountId:
+          this.sourceAccount.accountId,
+
+        targetAccountId,
+
+        amount,
+
+        description
+      }
+    );
 
     this.isSubmitting = true;
 
     this.accountService.exchange({
-      sourceAccountId: this.sourceAccount.accountId,
-      targetAccountId: targetAccountId,
-      amount: amount,
-      description: description
+
+      sourceAccountId:
+        this.sourceAccount.accountId,
+
+      targetAccountId:
+        targetAccountId,
+
+      amount:
+        amount,
+
+      description:
+        description
+
     }).subscribe({
 
       next: (response: any) => {
 
         console.log(
-          '✅ DÖVİZ DÖNÜŞÜMÜ BAŞARILI',
+          '================================'
+        );
+
+        console.log(
+          '✅ DÖVİZ DÖNÜŞÜMÜ BAŞARILI'
+        );
+
+        console.log(
+          'Backend response:',
           response
         );
 
+        console.log(
+          '================================'
+        );
+
         alert(
-          `${amount.toFixed(2)} ${this.sourceAccount.currencyCode} başarıyla dönüştürüldü.`
+          `${amount.toFixed(2)} ${
+            this.sourceAccount.currencyCode
+          } başarıyla ${
+            this.getTargetCurrency()
+          } hesabına dönüştürüldü.`
         );
 
         this.dialogRef.close(true);
@@ -336,8 +850,25 @@ loadData(): void {
       error: (err) => {
 
         console.error(
-          '❌ DÖVİZ DÖNÜŞÜMÜ HATASI',
-          err
+          '================================'
+        );
+
+        console.error(
+          '❌ DÖVİZ DÖNÜŞÜMÜ HATASI'
+        );
+
+        console.error(
+          'HTTP status:',
+          err?.status
+        );
+
+        console.error(
+          'Backend error:',
+          err?.error
+        );
+
+        console.error(
+          '================================'
         );
 
         alert(
@@ -346,12 +877,19 @@ loadData(): void {
         );
 
         this.isSubmitting = false;
+
+        this.cdr.detectChanges();
       }
 
     });
   }
 
+  // ============================================================
+  // CLOSE
+  // ============================================================
+
   close(): void {
+
     this.dialogRef.close(false);
   }
 }

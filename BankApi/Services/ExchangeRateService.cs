@@ -30,79 +30,207 @@ namespace BankApi.Services
             var xml = await client.GetStringAsync(TcmbUrl);
             var document = XDocument.Parse(xml);
 
-            var targetCurrencies = new[] { "USD", "EUR" };
-
-            var rates = new List<ExchangeRateDto>();
-
             using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            var tryCurrencyId = await GetCurrencyIdAsync(conn, "TRY");
+            // --------------------------------------------------
+            // 1. Para birimlerinin ID'lerini al
+            // --------------------------------------------------
 
-            foreach (var code in targetCurrencies)
+            var tryCurrencyId =
+                await GetCurrencyIdAsync(conn, "TRY");
+
+            var usdCurrencyId =
+                await GetCurrencyIdAsync(conn, "USD");
+
+            var eurCurrencyId =
+                await GetCurrencyIdAsync(conn, "EUR");
+
+            // --------------------------------------------------
+            // 2. TCMB'den USD ve EUR kurlarını al
+            // --------------------------------------------------
+
+            var usd = GetTcmbRate(document, "USD");
+            var eur = GetTcmbRate(document, "EUR");
+
+            // --------------------------------------------------
+            // 3. TCMB kurlarını DB'ye yaz
+            //
+            // USD -> TRY
+            // EUR -> TRY
+            // --------------------------------------------------
+
+            await UpsertRateAsync(
+                conn,
+                usdCurrencyId,
+                tryCurrencyId,
+                usd.BuyingRate,
+                usd.SellingRate,
+                usd.Rate
+            );
+
+            await UpsertRateAsync(
+                conn,
+                eurCurrencyId,
+                tryCurrencyId,
+                eur.BuyingRate,
+                eur.SellingRate,
+                eur.Rate
+            );
+
+            // --------------------------------------------------
+            // 4. TRY -> USD
+            //
+            // Banka USD sattığı için SELLING kullanılır.
+            // --------------------------------------------------
+
+            var tryToUsdRate =
+                1m / usd.SellingRate;
+
+            await UpsertRateAsync(
+                conn,
+                tryCurrencyId,
+                usdCurrencyId,
+                tryToUsdRate,
+                tryToUsdRate,
+                tryToUsdRate
+            );
+
+            // --------------------------------------------------
+            // 5. TRY -> EUR
+            //
+            // Banka EUR sattığı için SELLING kullanılır.
+            // --------------------------------------------------
+
+            var tryToEurRate =
+                1m / eur.SellingRate;
+
+            await UpsertRateAsync(
+                conn,
+                tryCurrencyId,
+                eurCurrencyId,
+                tryToEurRate,
+                tryToEurRate,
+                tryToEurRate
+            );
+
+            // --------------------------------------------------
+            // 6. USD -> EUR
+            //
+            // USD önce bankaya satılıyor:
+            // USD buying
+            //
+            // Sonra EUR bankadan alınıyor:
+            // EUR selling
+            //
+            // USD -> EUR =
+            // USD buying / EUR selling
+            // --------------------------------------------------
+
+            var usdToEurRate =
+                usd.BuyingRate / eur.SellingRate;
+
+            await UpsertRateAsync(
+                conn,
+                usdCurrencyId,
+                eurCurrencyId,
+                usdToEurRate,
+                usdToEurRate,
+                usdToEurRate
+            );
+
+            // --------------------------------------------------
+            // 7. EUR -> USD
+            //
+            // EUR buying / USD selling
+            // --------------------------------------------------
+
+            var eurToUsdRate =
+                eur.BuyingRate / usd.SellingRate;
+
+            await UpsertRateAsync(
+                conn,
+                eurCurrencyId,
+                usdCurrencyId,
+                eurToUsdRate,
+                eurToUsdRate,
+                eurToUsdRate
+            );
+
+            // --------------------------------------------------
+            // 8. Güncel kurları DB'den tekrar oku
+            // --------------------------------------------------
+
+            return await GetRatesAsync();
+        }
+
+        // ======================================================
+        // TCMB'den tek bir para biriminin kurunu okur
+        // ======================================================
+
+        private static TcmbRate GetTcmbRate(
+            XDocument document,
+            string currencyCode)
+        {
+            var currency = document
+                .Descendants("Currency")
+                .FirstOrDefault(x =>
+                    (string?)x.Attribute("CurrencyCode") == currencyCode);
+
+            if (currency == null)
             {
-                var currency = document
-                    .Descendants("Currency")
-                    .FirstOrDefault(x =>
-                        (string?)x.Attribute("CurrencyCode") == code);
-
-                if (currency == null)
-                    continue;
-
-                var buyingText = currency.Element("ForexBuying")?.Value;
-                var sellingText = currency.Element("ForexSelling")?.Value;
-
-                if (!decimal.TryParse(
-                        buyingText,
-                        NumberStyles.Any,
-                        CultureInfo.InvariantCulture,
-                        out var buyingRate))
-                {
-                    continue;
-                }
-
-                if (!decimal.TryParse(
-                        sellingText,
-                        NumberStyles.Any,
-                        CultureInfo.InvariantCulture,
-                        out var sellingRate))
-                {
-                    continue;
-                }
-
-                var rate = (buyingRate + sellingRate) / 2m;
-
-                var fromCurrencyId =
-                    await GetCurrencyIdAsync(conn, code);
-
-                await UpsertRateAsync(
-                    conn,
-                    fromCurrencyId,
-                    tryCurrencyId,
-                    buyingRate,
-                    sellingRate,
-                    rate
-                );
-
-                rates.Add(new ExchangeRateDto
-                {
-                    FromCurrency = code,
-                    ToCurrency = "TRY",
-                    BuyingRate = buyingRate,
-                    SellingRate = sellingRate,
-                    Rate = rate,
-                    UpdatedAt = DateTime.Now
-                });
+                throw new InvalidOperationException(
+                    $"TCMB'de {currencyCode} kuru bulunamadı.");
             }
 
-            return rates;
+            var buyingText =
+                currency.Element("ForexBuying")?.Value;
+
+            var sellingText =
+                currency.Element("ForexSelling")?.Value;
+
+            if (!decimal.TryParse(
+                    buyingText,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out var buyingRate))
+            {
+                throw new InvalidOperationException(
+                    $"{currencyCode} alış kuru okunamadı.");
+            }
+
+            if (!decimal.TryParse(
+                    sellingText,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out var sellingRate))
+            {
+                throw new InvalidOperationException(
+                    $"{currencyCode} satış kuru okunamadı.");
+            }
+
+            var rate =
+                (buyingRate + sellingRate) / 2m;
+
+            return new TcmbRate
+            {
+                BuyingRate = buyingRate,
+                SellingRate = sellingRate,
+                Rate = rate
+            };
         }
+
+        // ======================================================
+        // DB'deki güncel kurları getirir
+        // ======================================================
 
         public async Task<List<ExchangeRateDto>> GetRatesAsync()
         {
             var rates = new List<ExchangeRateDto>();
 
-            using var conn = new NpgsqlConnection(_connectionString);
+            using var conn =
+                new NpgsqlConnection(_connectionString);
+
             await conn.OpenAsync();
 
             const string sql = @"
@@ -118,11 +246,14 @@ namespace BankApi.Services
                     ON fc.id = er.from_currency_id
                 INNER JOIN currencies tc
                     ON tc.id = er.to_currency_id
-                ORDER BY fc.code;
+                ORDER BY fc.code, tc.code;
             ";
 
-            using var cmd = new NpgsqlCommand(sql, conn);
-            using var reader = await cmd.ExecuteReaderAsync();
+            using var cmd =
+                new NpgsqlCommand(sql, conn);
+
+            using var reader =
+                await cmd.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
             {
@@ -140,6 +271,10 @@ namespace BankApi.Services
             return rates;
         }
 
+        // ======================================================
+        // Currency ID getirir
+        // ======================================================
+
         private static async Task<int> GetCurrencyIdAsync(
             NpgsqlConnection conn,
             string code)
@@ -150,10 +285,15 @@ namespace BankApi.Services
                 WHERE code = @code;
             ";
 
-            using var cmd = new NpgsqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("code", code);
+            using var cmd =
+                new NpgsqlCommand(sql, conn);
 
-            var result = await cmd.ExecuteScalarAsync();
+            cmd.Parameters.AddWithValue(
+                "code",
+                code);
+
+            var result =
+                await cmd.ExecuteScalarAsync();
 
             if (result == null)
             {
@@ -163,6 +303,10 @@ namespace BankApi.Services
 
             return Convert.ToInt32(result);
         }
+
+        // ======================================================
+        // Exchange rate INSERT / UPDATE
+        // ======================================================
 
         private static async Task UpsertRateAsync(
             NpgsqlConnection conn,
@@ -199,24 +343,41 @@ namespace BankApi.Services
                     updated_at = CURRENT_TIMESTAMP;
             ";
 
-            using var cmd = new NpgsqlCommand(sql, conn);
+            using var cmd =
+                new NpgsqlCommand(sql, conn);
 
             cmd.Parameters.AddWithValue(
-                "from_currency_id", fromCurrencyId);
+                "from_currency_id",
+                fromCurrencyId);
 
             cmd.Parameters.AddWithValue(
-                "to_currency_id", toCurrencyId);
+                "to_currency_id",
+                toCurrencyId);
 
             cmd.Parameters.AddWithValue(
-                "buying_rate", buyingRate);
+                "buying_rate",
+                buyingRate);
 
             cmd.Parameters.AddWithValue(
-                "selling_rate", sellingRate);
+                "selling_rate",
+                sellingRate);
 
             cmd.Parameters.AddWithValue(
-                "rate", rate);
+                "rate",
+                rate);
 
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        // ======================================================
+        // TCMB kur modeli
+        // ======================================================
+
+        private class TcmbRate
+        {
+            public decimal BuyingRate { get; set; }
+            public decimal SellingRate { get; set; }
+            public decimal Rate { get; set; }
         }
     }
 }

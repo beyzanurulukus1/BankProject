@@ -33,11 +33,13 @@
 
     overflow: hidden;
 
+    display: flex;
+    flex-direction: column;
+
     transition:
         width 0.25s ease,
         padding 0.25s ease;
 }
-
 
 /* =========================================
    COLLAPSED SIDEBAR
@@ -429,4 +431,90 @@
         padding: 20px;
     }
 
+}
+/* =========================================
+   LOGOUT
+========================================= */
+
+.sidebar-footer {
+    margin-top: auto;
+
+    width: 100%;
+
+    padding-top: 20px;
+}
+
+
+.logout-button {
+    width: 100%;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    box-sizing: border-box;
+
+    padding: 0 13px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: transparent;
+
+    color: #222;
+
+    font-family: inherit;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.logout-button:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+
+.logout-button .material-icons {
+    width: 22px;
+    height: 22px;
+
+    min-width: 22px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 22px;
+
+    line-height: 1;
+}
+
+
+/* =========================================
+   COLLAPSED LOGOUT
+========================================= */
+
+.sidebar.collapsed .sidebar-footer {
+    display: flex;
+
+    justify-content: center;
+}
+
+
+.sidebar.collapsed .logout-button {
+    width: 46px;
+
+    padding: 0;
+
+    justify-content: center;
 }

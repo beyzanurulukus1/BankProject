@@ -92,6 +92,15 @@
         convertedAmount !== null
       "
       class="rate-preview">
+      <div class="rate-row">
+  <span>Dönüşüm</span>
+
+  <strong>
+    {{ sourceAccount.currencyCode }}
+    →
+    {{ getTargetCurrency() }}
+  </strong>
+</div>
 
       <div class="rate-row">
 
@@ -163,11 +172,12 @@
         type="submit"
         class="exchange-submit-button"
         [disabled]="
-          exchangeForm.invalid ||
-          !convertedAmount ||
-          isSubmitting ||
-          targetAccounts.length === 0
-        ">
+  exchangeForm.invalid ||
+  convertedAmount === null ||
+  convertedAmount <= 0 ||
+  isSubmitting ||
+  targetAccounts.length === 0
+">
 
         {{
           isSubmitting

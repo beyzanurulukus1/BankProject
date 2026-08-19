@@ -144,6 +144,25 @@
 
     </div>
 
+        <!-- ÇIKIŞ -->
+    <div class="sidebar-footer">
+
+      <button
+        type="button"
+        class="logout-button"
+        (click)="logout()">
+
+        <span class="material-icons">
+          logout
+        </span>
+
+        <span *ngIf="sidebarOpen">
+          Çıkış Yap
+        </span>
+
+      </button>
+
+    </div>
   </aside>
 
 

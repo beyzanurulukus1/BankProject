@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-
+import { Router } from '@angular/router';
 export interface RegisterRequest {
   firstName: string;
   lastName: string;
@@ -23,7 +23,7 @@ export interface LoginRequest {
 export class AuthService {
 
   private http = inject(HttpClient);
-
+private router = inject(Router);
   register(request: RegisterRequest) {
 
     return this.http.post<{
@@ -47,5 +47,9 @@ export class AuthService {
     );
 
   }
+ logout(): void {
+  localStorage.removeItem('token');
+  this.router.navigate(['/login']);
+}
 
 }

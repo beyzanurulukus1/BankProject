@@ -1,131 +1,7 @@
 -- =============================================
--- BANK API DATABASE SCHEMA & PROCEDURES (FINAL)
+-- BANK API DATABASE SETUP
+-- 02 - FUNCTIONS / PROCEDURES
 -- =============================================
-
--- 1. ROLES
-CREATE TABLE IF NOT EXISTS roles (
-    id SERIAL PRIMARY KEY,
-    role_name VARCHAR(50) NOT NULL UNIQUE
-);
-
--- 2. CURRENCIES
-CREATE TABLE IF NOT EXISTS currencies (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(10) NOT NULL UNIQUE,
-    name VARCHAR(50) NOT NULL,
-    symbol VARCHAR(5) NOT NULL
-);
-
--- 3. USERS
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role_id INT NOT NULL REFERENCES roles (id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 4. CUSTOMERS
-CREATE TABLE IF NOT EXISTS customers (
-    id SERIAL PRIMARY KEY,
-    user_id INT UNIQUE NOT NULL REFERENCES users (id),
-    tckn VARCHAR(11) UNIQUE NOT NULL,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
-    birth_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 5. ACCOUNTS
-CREATE TABLE IF NOT EXISTS accounts (
-    id SERIAL PRIMARY KEY,
-    customer_id INT NOT NULL REFERENCES customers (id),
-    currency_id INT NOT NULL REFERENCES currencies (id),
-    iban VARCHAR(34) UNIQUE NOT NULL,
-     nickname VARCHAR(100),
-    balance DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 6. TRANSACTIONS
-CREATE TABLE IF NOT EXISTS transactions (
-    id SERIAL PRIMARY KEY,
-    source_account_id INT REFERENCES accounts (id),
-    target_account_id INT REFERENCES accounts (id),
-    amount DECIMAL(18, 2) NOT NULL,
-    transaction_type VARCHAR(50) NOT NULL,
-    tax_amount DECIMAL(18, 2) DEFAULT 0.00,
-    description VARCHAR(255),
-    status VARCHAR(20) DEFAULT 'COMPLETED',
-    reference_no VARCHAR(50) UNIQUE,
-    transaction_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    exchange_rate DECIMAL(18, 4),
-    exchange_rate_type VARCHAR(10),
-    converted_amount DECIMAL(18,2)
-);
-
--- 7. LOANS
-CREATE TABLE IF NOT EXISTS loans (
-    id SERIAL PRIMARY KEY,
-    customer_id INT NOT NULL REFERENCES customers (id),
-    account_id INT NOT NULL REFERENCES accounts (id),
-    amount DECIMAL(18, 2) NOT NULL,
-    interest_rate DECIMAL(5, 4) NOT NULL,
-    term_in_months INT NOT NULL,
-    total_repayment DECIMAL(18, 2) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 8. LOAN INSTALLMENTS
-CREATE TABLE IF NOT EXISTS loan_installments (
-    id SERIAL PRIMARY KEY,
-    loan_id INT NOT NULL REFERENCES loans (id),
-    installment_number INT NOT NULL,
-    due_date DATE NOT NULL,
-    amount DECIMAL(18, 2) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    paid_at TIMESTAMP
-);
-
--- 9. TAX RATES
-CREATE TABLE IF NOT EXISTS tax_rates (
-    id SERIAL PRIMARY KEY,
-    tax_type VARCHAR(50) NOT NULL UNIQUE,
-    rate DECIMAL(5, 4) NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 10. EXCHANGE RATES
- TABLE IF EXISTS exchaDROPnge_rates CASCADE;
-
--- 10. EXCHANGE RATES
-CREATE TABLE exchange_rates (
-    id SERIAL PRIMARY KEY,
-    from_currency_id INT NOT NULL REFERENCES currencies (id),
-    to_currency_id INT NOT NULL REFERENCES currencies (id),
-    buying_rate DECIMAL(18, 4) NOT NULL,
-    selling_rate DECIMAL(18, 4) NOT NULL,
-    rate DECIMAL(18, 4) NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- SEED DATA
-INSERT INTO
-    roles (role_name)
-VALUES ('Admin'),
-    ('Customer'),
-    ('Employee') ON CONFLICT DO NOTHING;
-
-INSERT INTO
-    currencies (code, name, symbol)
-VALUES ('TRY', 'Türk Lirası', '₺'),
-    ('USD', 'US Dollar', '$'),
-    ('EUR', 'Euro', '€') ON CONFLICT DO NOTHING;
 
 -- =============================================
 -- 1. Register Customer Procedure
@@ -743,7 +619,6 @@ DROP FUNCTION IF EXISTS fn_exchange_currency(
     DECIMAL,
     VARCHAR
 );
-
 CREATE OR REPLACE FUNCTION fn_exchange_currency(
     p_user_id INT,
     p_source_account_id INT,
@@ -774,24 +649,43 @@ DECLARE
     v_target_currency_code VARCHAR(10);
     v_target_status VARCHAR(20);
 
-    v_buying_rate DECIMAL(18,6);
-    v_selling_rate DECIMAL(18,6);
     v_exchange_rate DECIMAL(18,6);
-    v_exchange_rate_type VARCHAR(10);
+    v_exchange_rate_type VARCHAR(20);
 
     v_target_amount DECIMAL(18,2);
 
     v_transaction_id INT;
     v_reference_no VARCHAR(50);
+
 BEGIN
 
+    -- =========================================================
+    -- 1. TUTAR KONTROLÜ
+    -- =========================================================
+
     IF p_amount <= 0 THEN
-        RAISE EXCEPTION 'Dönüştürülecek tutar 0''dan büyük olmalıdır.';
+
+        RAISE EXCEPTION
+            'Dönüştürülecek tutar 0''dan büyük olmalıdır.';
+
     END IF;
 
+
+    -- =========================================================
+    -- 2. AYNI HESAP KONTROLÜ
+    -- =========================================================
+
     IF p_source_account_id = p_target_account_id THEN
-        RAISE EXCEPTION 'Kaynak ve hedef hesap aynı olamaz.';
+
+        RAISE EXCEPTION
+            'Kaynak ve hedef hesap aynı olamaz.';
+
     END IF;
+
+
+    -- =========================================================
+    -- 3. CUSTOMER BUL
+    -- =========================================================
 
     SELECT id
     INTO v_customer_id
@@ -799,151 +693,267 @@ BEGIN
     WHERE user_id = p_user_id;
 
     IF v_customer_id IS NULL THEN
-        RAISE EXCEPTION 'Kullanıcıya ait müşteri bulunamadı.';
+
+        RAISE EXCEPTION
+            'Kullanıcıya ait müşteri bulunamadı.';
+
     END IF;
+
+
+    -- =========================================================
+    -- 4. KAYNAK HESAP
+    -- =========================================================
 
     SELECT
         a.balance,
         a.currency_id,
         c.code,
         a.status
+
     INTO
         v_source_balance,
         v_source_currency_id,
         v_source_currency_code,
         v_source_status
+
     FROM accounts a
+
     INNER JOIN currencies c
         ON c.id = a.currency_id
+
     WHERE a.id = p_source_account_id
       AND a.customer_id = v_customer_id
+
     FOR UPDATE;
 
+
     IF v_source_status IS NULL THEN
-        RAISE EXCEPTION 'Kaynak hesap bulunamadı.';
+
+        RAISE EXCEPTION
+            'Kaynak hesap bulunamadı.';
+
     END IF;
 
+
     IF v_source_status <> 'ACTIVE' THEN
-        RAISE EXCEPTION 'Kaynak hesap aktif değil.';
+
+        RAISE EXCEPTION
+            'Kaynak hesap aktif değil.';
+
     END IF;
+
+
+    -- =========================================================
+    -- 5. HEDEF HESAP
+    -- =========================================================
 
     SELECT
         a.currency_id,
         c.code,
         a.status
+
     INTO
         v_target_currency_id,
         v_target_currency_code,
         v_target_status
+
     FROM accounts a
+
     INNER JOIN currencies c
         ON c.id = a.currency_id
+
     WHERE a.id = p_target_account_id
       AND a.customer_id = v_customer_id
+
     FOR UPDATE;
 
+
     IF v_target_status IS NULL THEN
-        RAISE EXCEPTION 'Hedef hesap bulunamadı.';
+
+        RAISE EXCEPTION
+            'Hedef hesap bulunamadı.';
+
     END IF;
+
 
     IF v_target_status <> 'ACTIVE' THEN
-        RAISE EXCEPTION 'Hedef hesap aktif değil.';
+
+        RAISE EXCEPTION
+            'Hedef hesap aktif değil.';
+
     END IF;
 
-    IF v_source_currency_code = v_target_currency_code THEN
-        RAISE EXCEPTION 'Aynı para birimleri arasında döviz dönüşümü yapılamaz.';
+
+    -- =========================================================
+    -- 6. AYNI PARA BİRİMİ KONTROLÜ
+    -- =========================================================
+
+    IF
+        v_source_currency_code =
+        v_target_currency_code
+    THEN
+
+        RAISE EXCEPTION
+            'Aynı para birimleri arasında döviz dönüşümü yapılamaz.';
+
     END IF;
+
+
+    -- =========================================================
+    -- 7. BAKİYE KONTROLÜ
+    -- =========================================================
 
     IF v_source_balance < p_amount THEN
-        RAISE EXCEPTION 'Yetersiz bakiye.';
+
+        RAISE EXCEPTION
+            'Yetersiz bakiye.';
+
     END IF;
 
-    /*
-        TRY -> USD/EUR
-        Banka dövizi müşteriye satıyor.
-        Bu nedenle SELLING kullanılır.
-    */
-    IF v_source_currency_code = 'TRY'
-       AND v_target_currency_code IN ('USD', 'EUR')
+
+    -- =========================================================
+    -- 8. KURU exchange_rates TABLOSUNDAN BUL
+    --
+    -- rate:
+    -- 1 kaynak para biriminin kaç hedef para birimi
+    -- ettiğini ifade eder.
+    --
+    -- Örnek:
+    --
+    -- USD -> TRY = 47.8724
+    -- TRY -> USD = 0.0209
+    -- USD -> EUR = 0.8623
+    -- EUR -> USD = 1.1555
+    --
+    -- Bu nedenle tüm dönüşümlerde ÇARPMA yapılır.
+    -- =========================================================
+
+    SELECT
+        er.rate
+
+    INTO
+        v_exchange_rate
+
+    FROM exchange_rates er
+
+    WHERE er.from_currency_id = v_source_currency_id
+      AND er.to_currency_id = v_target_currency_id;
+
+
+    -- =========================================================
+    -- 9. KUR BULUNAMADI
+    -- =========================================================
+
+    IF v_exchange_rate IS NULL THEN
+
+        RAISE EXCEPTION
+            '% -> % kuru bulunamadı.',
+            v_source_currency_code,
+            v_target_currency_code;
+
+    END IF;
+
+
+    -- =========================================================
+    -- 10. KUR TİPİ
+    -- =========================================================
+
+    IF
+        v_source_currency_code = 'TRY'
+        AND v_target_currency_code <> 'TRY'
     THEN
 
-        SELECT
-            selling_rate
-        INTO
-            v_selling_rate
-        FROM exchange_rates
-        WHERE from_currency_id = v_target_currency_id
-          AND to_currency_id = v_source_currency_id;
+        v_exchange_rate_type :=
+            'SELLING';
 
-        IF v_selling_rate IS NULL THEN
-            RAISE EXCEPTION
-                '%/% kuru bulunamadı.',
-                v_target_currency_code,
-                v_source_currency_code;
-        END IF;
-
-        v_exchange_rate := v_selling_rate;
-        v_exchange_rate_type := 'SELLING';
-
-        v_target_amount :=
-            ROUND(p_amount / v_selling_rate, 2);
-
-    /*
-        USD/EUR -> TRY
-        Banka dövizi müşteriden satın alıyor.
-        Bu nedenle BUYING kullanılır.
-    */
-    ELSIF v_source_currency_code IN ('USD', 'EUR')
-          AND v_target_currency_code = 'TRY'
+    ELSIF
+        v_source_currency_code <> 'TRY'
+        AND v_target_currency_code = 'TRY'
     THEN
 
-        SELECT
-            buying_rate
-        INTO
-            v_buying_rate
-        FROM exchange_rates
-        WHERE from_currency_id = v_source_currency_id
-          AND to_currency_id = v_target_currency_id;
-
-        IF v_buying_rate IS NULL THEN
-            RAISE EXCEPTION
-                '%/% kuru bulunamadı.',
-                v_source_currency_code,
-                v_target_currency_code;
-        END IF;
-
-        v_exchange_rate := v_buying_rate;
-        v_exchange_rate_type := 'BUYING';
-
-        v_target_amount :=
-            ROUND(p_amount * v_buying_rate, 2);
+        v_exchange_rate_type :=
+            'BUYING';
 
     ELSE
 
-        RAISE EXCEPTION
-            'Bu para birimleri arasındaki dönüşüm şu anda desteklenmiyor.';
+        v_exchange_rate_type :=
+            'CROSS';
 
     END IF;
 
+
+    -- =========================================================
+    -- 11. HEDEF TUTARI HESAPLA
+    --
+    -- exchange_rates.rate doğrudan
+    -- kaynak -> hedef oranıdır.
+    --
+    -- Örnek:
+    --
+    -- 10000 TRY * 0.0209 = 209 USD
+    --
+    -- 100 USD * 47.8724 = 4787.24 TRY
+    --
+    -- 100 USD * 0.8623 = 86.23 EUR
+    -- =========================================================
+
+    v_target_amount :=
+        ROUND(
+            p_amount * v_exchange_rate,
+            2
+        );
+
+
+    -- =========================================================
+    -- 12. REFERANS NUMARASI
+    -- =========================================================
+
     v_reference_no :=
         'FX'
-        || TO_CHAR(
+        ||
+        TO_CHAR(
             CLOCK_TIMESTAMP(),
             'YYYYMMDDHH24MISSMS'
         )
-        || LPAD(
-            FLOOR(RANDOM() * 10000)::TEXT,
+        ||
+        LPAD(
+            FLOOR(
+                RANDOM() * 10000
+            )::TEXT,
             4,
             '0'
         );
 
-    UPDATE accounts
-    SET balance = balance - p_amount
-    WHERE id = p_source_account_id;
+
+    -- =========================================================
+    -- 13. KAYNAK HESAPTAN PARA ÇIKAR
+    -- =========================================================
 
     UPDATE accounts
-    SET balance = balance + v_target_amount
-    WHERE id = p_target_account_id;
+
+    SET balance =
+        balance - p_amount
+
+    WHERE id =
+        p_source_account_id;
+
+
+    -- =========================================================
+    -- 14. HEDEF HESABA PARA EKLE
+    -- =========================================================
+
+    UPDATE accounts
+
+    SET balance =
+        balance + v_target_amount
+
+    WHERE id =
+        p_target_account_id;
+
+
+    -- =========================================================
+    -- 15. TRANSACTION KAYDI
+    -- =========================================================
 
     INSERT INTO transactions
     (
@@ -958,6 +968,7 @@ BEGIN
         exchange_rate_type,
         converted_amount
     )
+
     VALUES
     (
         p_source_account_id,
@@ -971,10 +982,17 @@ BEGIN
         v_exchange_rate_type,
         v_target_amount
     )
+
     RETURNING id
     INTO v_transaction_id;
 
+
+    -- =========================================================
+    -- 16. SONUÇ
+    -- =========================================================
+
     RETURN QUERY
+
     SELECT
         v_transaction_id,
         v_reference_no,
@@ -986,89 +1004,7 @@ BEGIN
 
 END;
 $$;
-CREATE TABLE investment_accounts (
-    id SERIAL PRIMARY KEY,
 
-    user_id INTEGER NOT NULL,
-
-    cash_balance NUMERIC(18,2) NOT NULL DEFAULT 0,
-
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_investment_account_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id),
-
-    CONSTRAINT uq_investment_account_user
-        UNIQUE (user_id),
-
-    CONSTRAINT chk_investment_cash_balance
-        CHECK (cash_balance >= 0)
-);
-CREATE TABLE portfolio_positions (
-    id SERIAL PRIMARY KEY,
-
-    investment_account_id INTEGER NOT NULL,
-
-    symbol VARCHAR(20) NOT NULL,
-
-    quantity NUMERIC(18,4) NOT NULL DEFAULT 0,
-
-    average_cost NUMERIC(18,4) NOT NULL DEFAULT 0,
-
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_portfolio_investment_account
-        FOREIGN KEY (investment_account_id)
-        REFERENCES investment_accounts(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT uq_portfolio_symbol
-        UNIQUE (investment_account_id, symbol),
-
-    CONSTRAINT chk_portfolio_quantity
-        CHECK (quantity >= 0),
-
-    CONSTRAINT chk_portfolio_average_cost
-        CHECK (average_cost >= 0)
-);
-CREATE TABLE investment_transactions (
-    id SERIAL PRIMARY KEY,
-
-    investment_account_id INTEGER NOT NULL,
-
-    symbol VARCHAR(20) NOT NULL,
-
-    transaction_type VARCHAR(10) NOT NULL,
-
-    quantity NUMERIC(18,4) NOT NULL,
-
-    price NUMERIC(18,4) NOT NULL,
-
-    total_amount NUMERIC(18,2) NOT NULL,
-    realized_profit_loss NUMERIC(18,2),
-
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_investment_transaction_account
-        FOREIGN KEY (investment_account_id)
-        REFERENCES investment_accounts(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT chk_investment_transaction_type
-        CHECK (transaction_type IN ('BUY', 'SELL')),
-
-    CONSTRAINT chk_investment_transaction_quantity
-        CHECK (quantity > 0),
-
-    CONSTRAINT chk_investment_transaction_price
-        CHECK (price > 0),
-
-    CONSTRAINT chk_investment_transaction_total
-        CHECK (total_amount > 0)
-);
 CREATE OR REPLACE FUNCTION fn_get_or_create_investment_account(
     p_user_id INTEGER
 )
@@ -1196,7 +1132,8 @@ BEGIN
       AND ia.id = v_investment_account_id;
 
 END;
-$$;CREATE OR REPLACE FUNCTION fn_buy_stock(
+$$;
+CREATE OR REPLACE FUNCTION fn_buy_stock(
     p_user_id INTEGER,
     p_symbol VARCHAR,
     p_quantity NUMERIC,
