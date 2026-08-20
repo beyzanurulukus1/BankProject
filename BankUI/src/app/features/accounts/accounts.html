@@ -47,79 +47,98 @@
         </div>
 
 
-        <div class="header-right">
+<div class="header-right">
 
-          <span
-            class="status"
-            [class.active]="account.status === 'ACTIVE'"
-            [class.passive]="account.status === 'PASSIVE'">
+  <span
+    class="status"
+    [class.active]="account.status === 'ACTIVE'"
+    [class.passive]="account.status === 'PASSIVE'">
 
-            {{ account.status }}
+    {{ account.status }}
 
-          </span>
+  </span>
 
+  <button
+    mat-icon-button
+    [matMenuTriggerFor]="accountMenu">
 
-          <button
-            mat-icon-button
-            [matMenuTriggerFor]="accountMenu">
+    <mat-icon>
+      more_vert
+    </mat-icon>
 
-            <mat-icon>
-              more_vert
-            </mat-icon>
-
-          </button>
-
-
-          <mat-menu #accountMenu="matMenu">
-
-            <button
-              mat-menu-item
-              (click)="copyIban(account.iban)">
-
-              <mat-icon>
-                content_copy
-              </mat-icon>
-
-              <span>
-                IBAN Kopyala
-              </span>
-
-            </button>
+  </button>
 
 
-            <button
-              mat-menu-item
-              (click)="editNickname(account)">
+  <mat-menu #accountMenu="matMenu">
 
-              <mat-icon>
-                edit
-              </mat-icon>
+    <!-- IBAN KOPYALA -->
+    <button
+      mat-menu-item
+      (click)="copyIban(account.iban)">
 
-              <span>
-                Takma Adı Düzenle
-              </span>
+      <mat-icon>
+        content_copy
+      </mat-icon>
 
-            </button>
+      <span>
+        IBAN Kopyala
+      </span>
+
+    </button>
 
 
-            <button
-              mat-menu-item
-              (click)="deactivateAccount(account.accountId)"
-              [disabled]="account.status === 'PASSIVE'">
+    <!-- TAKMA AD -->
+    <button
+      mat-menu-item
+      (click)="editNickname(account)">
 
-              <mat-icon>
-                block
-              </mat-icon>
+      <mat-icon>
+        edit
+      </mat-icon>
 
-              <span>
-                Hesabı Pasifleştir
-              </span>
+      <span>
+        Takma Adı Düzenle
+      </span>
 
-            </button>
+    </button>
 
-          </mat-menu>
 
-        </div>
+    <!-- AKTİF HESAP -->
+    <button
+      mat-menu-item
+      *ngIf="account.status === 'ACTIVE'"
+      (click)="deactivateAccount(account.accountId)">
+
+      <mat-icon>
+        block
+      </mat-icon>
+
+      <span>
+        Hesabı Pasifleştir
+      </span>
+
+    </button>
+
+
+    <!-- PASİF HESAP -->
+    <button
+      mat-menu-item
+      *ngIf="account.status === 'PASSIVE'"
+      (click)="activateAccount(account.accountId)">
+
+      <mat-icon>
+        check_circle
+      </mat-icon>
+
+      <span>
+        Hesabı Aktifleştir
+      </span>
+
+    </button>
+
+  </mat-menu>
+
+</div>
 
       </div>
 

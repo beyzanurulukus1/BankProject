@@ -87,6 +87,16 @@ loadAccounts() {
 
       this.accounts = response.data;
 
+      console.log(
+        "🔎 HESAP STATUS KONTROLÜ:",
+        this.accounts.map(account => ({
+          accountId: account.accountId,
+          nickname: account.nickname,
+          status: account.status,
+          statusLength: account.status?.length
+        }))
+      );
+
       this.cdr.detectChanges();
     },
 
@@ -205,6 +215,35 @@ loadAccounts() {
       });
   
   }
+  activateAccount(accountId: number) {
+
+  const confirmed = confirm(
+    "Bu hesabı aktifleştirmek istediğinize emin misiniz?"
+  );
+
+  if (!confirmed) return;
+
+  this.accountService
+    .activateAccount(accountId)
+    .subscribe({
+
+      next: () => {
+
+        alert("Hesap aktifleştirildi.");
+
+        this.loadAccounts();
+
+      },
+
+      error: err => {
+
+        console.log(err);
+
+      }
+
+    });
+
+}
   openDepositDialog(account: AccountResponse) {
 
   const dialogRef = this.dialog.open(DepositDialog, {

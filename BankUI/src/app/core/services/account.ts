@@ -48,6 +48,14 @@ export class AccountService {
       }
     );
   }
+  activateAccount(accountId: number) {
+  return this.http.put(
+    `${environment.apiUrl}/Account/activate`,
+    {
+      accountId
+    }
+  );
+}
 
   deposit(request: {
     accountId: number;

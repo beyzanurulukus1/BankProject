@@ -111,6 +111,28 @@ namespace BankApi.Controllers
             });
         }
 
+        [HttpPut("activate")]
+        public async Task<IActionResult> ActivateAccount(
+            DeactivateAccountDto dto)
+        {
+            var result =
+                await _accountService.ActivateAccountAsync(dto.AccountId);
+
+            if (!result)
+            {
+                return BadRequest(new
+                {
+                    isSuccess = false,
+                    message = "Hesap aktifleştirilemedi."
+                });
+            }
+
+            return Ok(new
+            {
+                isSuccess = true,
+                message = "Hesap aktifleştirildi."
+            });
+        }
 
 
     }

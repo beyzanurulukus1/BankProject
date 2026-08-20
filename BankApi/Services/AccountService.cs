@@ -124,6 +124,33 @@ namespace BankApi.Services
                 return false;
             }
         }
+        public async Task<bool> ActivateAccountAsync(int accountId)
+{
+    using var conn = new NpgsqlConnection(_connectionString);
+
+    await conn.OpenAsync();
+
+    string sql =
+        "SELECT fn_activate_account(@p_account_id)";
+
+    using var cmd = new NpgsqlCommand(sql, conn);
+
+    cmd.Parameters.AddWithValue(
+        "p_account_id",
+        accountId
+    );
+
+    try
+    {
+        await cmd.ExecuteNonQueryAsync();
+        return true;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex.Message);
+        return false;
+    }
+}
         
         
     }

@@ -1446,3 +1446,17 @@ BEGIN
 
 END;
 $$;
+CREATE OR REPLACE FUNCTION fn_activate_account(
+    p_account_id INT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+    UPDATE accounts
+    SET status = 'ACTIVE'
+    WHERE id = p_account_id;
+
+END;
+$$;
