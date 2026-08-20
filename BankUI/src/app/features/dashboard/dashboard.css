@@ -12,15 +12,19 @@
 .balance-card{
     background:#FFC72C !important;
     color:white;
-    padding:30px;
+    padding:24px 30px;
     border-radius:18px;
     margin-bottom:30px;
-    height:140px;
+    height:auto;
+    min-height: 140px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
 
 }
 
 .balance-card h3{
-    font-size:20px;
+    font-size:30px;
     margin-bottom:15px;
 }
 
