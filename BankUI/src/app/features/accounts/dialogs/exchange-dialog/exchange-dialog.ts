@@ -384,54 +384,54 @@ export class ExchangeDialog implements OnInit {
     // TRY -> USD / EUR
     // ========================================================
 
-    if (
-      sourceCurrency === 'TRY' &&
-      targetCurrency !== 'TRY'
-    ) {
+if (
+  sourceCurrency === 'TRY' &&
+  targetCurrency !== 'TRY'
+) {
 
-      this.rateType = 'SELLING';
+  this.rateType = 'SELLING';
 
-      const sellingRate =
-        rate.sellingRate;
+  const exchangeRate =
+    rate.rate;
 
-      this.convertedAmount =
-        Number(
-          (
-            amount /
-            sellingRate
-          ).toFixed(2)
-        );
+  this.convertedAmount =
+    Number(
+      (
+        amount *
+        exchangeRate
+      ).toFixed(2)
+    );
 
-      console.log('--------------------------------');
-      console.log('🏦 TRY -> DÖVİZ');
-      console.log(
-        'Kur tipi:',
-        'SELLING'
-      );
+console.log('--------------------------------');
+  console.log('🏦 TRY -> DÖVİZ');
+  console.log(
+    'Kur tipi:',
+    'SELLING'
+  );
 
-      console.log(
-        'Satış kuru:',
-        sellingRate
-      );
+  console.log(
+    'Dönüşüm kuru:',
+    exchangeRate
+  );
 
-      console.log(
-        'Kaynak tutar:',
-        amount,
-        sourceCurrency
-      );
+  console.log(
+    'Kaynak tutar:',
+    amount,
+    sourceCurrency
+  );
 
-      console.log(
-        'Alınacak:',
-        this.convertedAmount,
-        targetCurrency
-      );
+  console.log(
+    'Alınacak:',
+    this.convertedAmount,
+    targetCurrency
+  );
 
-      console.log('--------------------------------');
+  console.log('--------------------------------');
 
-      this.cdr.detectChanges();
+  this.cdr.detectChanges();
 
-      return;
-    }
+  return;
+}
 
     // ========================================================
     // USD / EUR -> TRY
@@ -444,17 +444,16 @@ export class ExchangeDialog implements OnInit {
 
       this.rateType = 'BUYING';
 
-      const buyingRate =
-        rate.buyingRate;
+const exchangeRate =
+  rate.rate;
 
-      this.convertedAmount =
-        Number(
-          (
-            amount *
-            buyingRate
-          ).toFixed(2)
-        );
-
+this.convertedAmount =
+  Number(
+    (
+      amount *
+      exchangeRate
+    ).toFixed(2)
+  );
       console.log('--------------------------------');
       console.log('🏦 DÖVİZ -> TRY');
       console.log(
@@ -464,7 +463,7 @@ export class ExchangeDialog implements OnInit {
 
       console.log(
         'Alış kuru:',
-        buyingRate
+        exchangeRate
       );
 
       console.log(
